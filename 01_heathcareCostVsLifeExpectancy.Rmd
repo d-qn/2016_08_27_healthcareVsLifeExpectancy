@@ -1,0 +1,279 @@
+---
+title: "Life Expectancy vs healthcare"
+author: "Duc-Quang Nguyen | swissinfo.ch"
+date: "27 Sept 2016"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    theme: simplex
+---
+
+## Related
+
+* [financing-healthcare/](https://ourworldindata.org/financing-healthcare/)
+* [life-expectancy-and-health-spending](https://ourworldindata.org/the-link-between-life-expectancy-and-health-spending-us-focus)
+
+* [tweenr github example](https://github.com/thomasp85/tweenr)
+* [tweenr tutorial](http://lenkiefer.com/2016/05/29/improving-R-animated-gifs-with-tweenr)
+* [gganimate](https://github.com/dgrtwo/gganimate)
+
+## Data
+
+* [OECD all health stuff](http://www.oecd.org/els/health-systems/Table-of-Content-Metadata-OECD-Health-Statistics-2016.pdf)
+* [OECD health expenditure](http://stats.oecd.org/viewhtml.aspx?datasetcode=SHA&lang=en)
+# [World bank](http://data.worldbank.org/indicator/SH.XPD.PCAP.PP.KD)
+* [Commonwelath fund CH profile](http://international.commonwealthfund.org/countries/switzerland/)
+* [Health Care Spending as a Percentage of GDP](http://www.commonwealthfund.org/interactives-and-data/chart-cart/chartbook/multinational-comparisons-data-2014/health-care-spending-as-a-percentage-of-gdp)
+* [HALE](http://apps.who.int/gho/data/view.main.HALEXv?lang=en)
+
+
+## Stories
+
+* [RTS info](http://www.rts.ch/info/economie/8078251-le-prix-d-une-vie-se-situerait-autour-des-200-000-francs-par-an.html)
+* [Economist](http://www.economist.com/blogs/economist-explains/2014/06/economist-explains-16)
+
+## Snippets
+
+*  Health care spending per capita has risen by over 70% in real terms since the early 1990s. This is reflected in a significantly healthier population – as shown by increased life expectancy and lower mortality for diseases such as cancer [OECD](https://www.oecd.org/eco/growth/46508904.pdf)
+
+
+```{r setup, include=FALSE}
+testGif <- F
+downloadData <- F
+plotTest <- F
+
+
+translation.file <- "input/healthcare expenditure vs life expectancy - Sheet1.csv"
+
+#iso3.sub <- c("NOR", "CHE", "ITA", "FRA", "JPN", "GBR", "ESP", "USA", "CHN", "IND", "BRA", "RUS")
+iso3.sub <- c("CHE", "ITA", "FRA", "JPN", "GBR", "ESP", "USA", "CHN", "DEU", "CAN")
+iso3.sub <- c("CHE", "FRA", "JPN", "KOR", "GBR", "ESP", "PRT", "USA", "DEU", "CAN", "SWE", "TUR")
+
+
+health.datafile <- "input/healthExpenditure_oecd.csv"
+le.datafife <- "input/lifeExpectancy_wb.csv"
+
+library(readr)
+library(tidyr)
+library(dplyr)
+library(magrittr)
+library(countrycode)
+library(ggplot2)
+library(scales)
+library(swiMap)
+library(swiTheme)
+library(forcats)
+
+### Getting data in packages
+
+library(WDI)
+library(OECD)
+
+#library(ggrepel)
+library(tweenr)
+library(gganimate)
+
+```
+
+
+```{r get data}
+if(downloadData) {
+  ## get health expenditure data
+  
+  # dsets <- get_datasets()
+  # search_dataset("health", dsets)
+  dst <- get_data_structure( 'SHA')
+  data.read <- get_dataset(oecd.idtb, filter = list("HFTOT", "HCTOT", "HPTOT", 'VRPPPR'))
+  data.read$obsTime <- as.numeric(data.read$obsTime)
+  
+  he.data <- data.read %>% select(-HF, -HC, -HP, -MEASURE, -TIME_FORMAT, -POWERCODE, -UNIT)
+  write_csv(he.data, path = health.datafile)
+  
+  # get life expectancy data
+  data.dl <- WDI(
+    indicator = 'SP.DYN.LE00.IN',
+    start = 1950,  
+    end = 2016, 
+    extra = TRUE, 
+    cache = NULL
+  )
+  colnames(data.dl)[3] <- 'value'
+  le.data <- data.dl %>% select(-capital, -longitude, -latitude, -lending)
+  
+  write_csv(le.data, path = le.datafife)  
+} else {
+  he.data <- read_csv(health.datafile)
+  le.data <- read_csv(le.datafife)
+  
+  txt <- loadTranslation(translation.file)
+}
+```
+
+```{r merge & wrangle}
+df1 <- he.data %>% 
+  rename(he = obsValue, iso3c = LOCATION, year = obsTime) %>% 
+  select(-REFERENCEPERIOD)
+df2 <- le.data %>% rename(le = value)
+
+df.all <- right_join(df1, df2)  
+df <- df.all %>% filter(iso3c %in% iso3.sub)
+
+# remove row with NA he or le
+#df <- df[which(!(is.na(df$he) | is.na(df$le))),] %>% arrange(year)
+df %>% group_by(iso3c) %>% summarise(nVal = length(he) )
+
+# test plot
+ylim <-  c(70, 85)
+xlim <- c(0, 10000)
+
+# remove rows with both NA values
+df.lab <- df[which((!is.na(df$he) & !is.na(df$le))),] %>% arrange(year)
+
+
+```
+
+
+```{r plot helper, echo = F}
+sTheme <- function(
+  base_size = 18, 
+  base_family = "OpenSans-CondensedLight", 
+  title_family = "OpenSans-CondensedBold", 
+  subtitle = "OpenSans-CondensedLight"
+) {
+  swi_theme(base_size = base_size, title_family = title_family, subtitle = subtitle, base_family = base_family) + 
+  theme(
+    axis.line.y = element_blank(), 
+    legend.position = "none"
+    ) 
+}
+
+gp <- ggplot(df, aes(x = he, y = le)) + 
+  geom_line(aes(group = iso2c, colour = iso2c), size = 0.1) + 
+  geom_text(data = subset(df.lab, year == max(year)), aes(label = country), 
+            nudge_x = 100) +
+  sTheme() + 
+      geom_smooth(size = 0.2, method = "loess") +
+  geom_label(
+    aes(x = 0, y = 85, label="Life Expectancy"), size = 5,
+    family = "OpenSans-CondensedLight", label.size = 0, nudge_x = 110
+  ) + 
+  theme(axis.line.y = element_blank()) + 
+    geom_point(aes(group = iso2c, colour = iso2c), size = 0.5) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10), limits = xlim,
+                     name = "Health expenditure by capita\n(adjusted for inflation, at PPP in 2010 USD)") +
+  scale_y_continuous(limits = ylim, name = "Life Expectancy") + 
+  scale_color_manual(values = swi_rpal)
+if(plotTest) gp
+
+tRange <- df.all %>% group_by(iso2c, iso3c, country) %>% 
+  summarise(start = min(year[which(!is.na(he) & !is.na(le))]), 
+            end = max(year[which(!is.na(he) & !is.na(le))])
+  ) %>% ungroup()
+tRange <- tRange[is.finite(tRange$start),] %>% as.data.frame()
+
+
+gp2 <- ggplot(df.all, aes(x = he, y = le)) + 
+  geom_line(aes(group = iso2c), size = 0.1, colour = "grey") + 
+  sTheme() + theme(plot.margin = unit(c(0.3, 0, 0.3, 0.3), "lines")) +
+  #   geom_label(
+  #   aes(x = 0, y = 85, label="Life Expectancy"), size = 6,
+  #   family = "OpenSans-CondensedLight", label.size = 0, nudge_x = 100
+  # ) + 
+  theme(axis.line.y = element_blank()) + 
+    geom_smooth(size = 0.2, method = "loess") +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10), limits = xlim,
+                     name = "Health expenditure by capita\n(adjusted for inflation, at PPP in 2010 USD)") +
+  scale_y_continuous(limits = c(50, 85)) 
+if(plotTest) gp2
+
+```
+
+```{r tweenr}
+
+dd <- df %>% select(-region, -income, -iso3c, -OBS_STATUS, -indicator)
+dd$country <- as.factor(dd$country)
+dd$iso2c <- as.factor(dd$iso2c)
+
+if(testGif) {
+  warning("\n data will be slashed to create a smaller gif")
+  dd <- dd %>% filter(year >= 2004)
+  txt <- txt[, 1, drop = F]
+}
+
+# for each country find the years where both he and le are defined
+years <- by(dd, dd$iso2c, function(ddd) ddd[which(!is.na(ddd$he) & !is.na(ddd$le)),'year'] ) %>% 
+  unlist(use.names = F) %>% unique() %>% sort()
+dd %<>% filter(year %in% years)
+
+# keep only one year data every 2 years
+# years <- sort(unique(dd$year))
+# years.sub <- seq(min(years), max(years), 2)
+# dd <- dd %>% filter(year %in% years.sub)
+
+# create a list of data frame for each year
+ddd <- split(dd, dd$year)
+ddd <- c(ddd, ddd[length(ddd)], ddd[length(ddd)], ddd[length(ddd)])
+
+tf <- tween_states(ddd, tweenlength = 1, statelength = 1, 
+                   ease = c('quadratic-in-out'), 
+                   nframes = 60) 
+time.lab <- tf %>% select(year, .frame) %>% filter(year %in% years)
+time.lab <- time.lab[!duplicated(time.lab),]
+time.lab$x <- 9900
+time.lab$y <- 70
+tf <- tf %<>% select(-year)
+
+for(lang in colnames(txt)) {
+
+  dddd <- tf
+  outfile <-  paste0("animated_healthcareEvsLifeE_", lang, ifelse(testGif, "_test", ""), ".gif")
+  
+  dddd$label <- countryTranslation(as.character(dddd$iso2c), lang)[,-1]
+  if(any(is.na(dddd$label))) {
+    stop("\nSome country translations are missing!")
+  }
+  
+  p <- ggplot(
+    data = dddd, 
+    aes(x = he, y = le, frame = .frame)
+  ) + 
+    geom_text(
+      data = time.lab, aes(x = x, y = y, label = year, frame  = .frame), 
+      size = 90, hjust = 1, vjust = 0, family = txt['title.font', lang], 
+      colour = "#ecf2f9", alpha = 0.7)   +
+    geom_text(
+      aes(x = he, y = le, label = label, frame  = .frame), 
+      hjust = 0, nudge_x = 100, family = txt['base.font', lang], size = 5, alpha  = 0.7
+    ) +
+    geom_path(aes( group = iso2c, colour = iso2c, cumulative = TRUE), size = 0.3) + 
+    geom_point(aes( group = iso2c, colour = iso2c), size = 2.5) +
+    sTheme(base_size = 26, base_family = txt['base.font', lang], title_family =  txt['title.font', lang], 
+           subtitle = txt['base.font', lang]) +
+    theme(plot.margin = unit(c(0.3, 0, 0.3, 0.3), "lines")) +
+    scale_x_continuous(
+      breaks = scales::pretty_breaks(n = 10),
+      limits = xlim,
+      labels = scales::dollar,
+      name = paste0(txt["x.lab", lang], "\n", txt["x.lab2", lang])) +
+    scale_y_continuous(
+      limits = ylim, name = txt["y.lab", lang], 
+      breaks = scales::pretty_breaks(n = 10)
+    ) + 
+    scale_color_manual(values = swi_rpal) +
+    labs(title = txt['main.title', lang], subtitle =  txt['descr', lang])
+  
+  animation::ani.options(interval = 1/8)
+  gg_animate(p, outfile, title_frame = F, ani.width = 640 * 1.2, 
+             ani.height = 640 * 1.2)
+
+
+}
+
+
+
+
+
+```
+
+```

@@ -1,0 +1,12 @@
+code,EN,FR,DE,IT,PT,AR,RU,ES,JA,ZH
+main.title,"Life expectancy increases with health expenditure, usually",,,,,,,,,
+descr,Life Expectancy vs Health expenditure over time (1970-2014),,,,,,,,,
+x.lab,Health expenditure by capita,,,,,,,,,
+x.lab2,"(adjusted for inflation, at PPP in 2010 USD)",,,,,,,,,
+y.lab,Life Expectancy (years),,,,,,,,,
+footer,dfsdafasdf,,,,,,,,,
+source,Source,source,Quelle,Fonte,fonte,المصدر,Источник,Fuente,出典,来源
+source.name,OECD & World Bank,,,,,,,,,
+code,Code,code,Code,Codice,código,الرمز,Код,código,コード,代码
+title.font,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,PingFang SC Semibold,PingFang SC Semibold
+base.font,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,Hiragino Sans W1,PingFang SC Light
