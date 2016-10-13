@@ -4,9 +4,21 @@ descr,Life Expectancy vs Health expenditure over time (1970-2014),,,,,,,,,
 x.lab,Health expenditure by capita,,,,,,,,,
 x.lab2,"(adjusted for inflation, at PPP in 2010 USD)",,,,,,,,,
 y.lab,Life Expectancy (years),,,,,,,,,
-footer,dfsdafasdf,,,,,,,,,
+footer,remix of Our World in Data ,,,,,,,,,
 source,Source,source,Quelle,Fonte,fonte,المصدر,Источник,Fuente,出典,来源
 source.name,OECD & World Bank,,,,,,,,,
 code,Code,code,Code,Codice,código,الرمز,Код,código,コード,代码
 title.font,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,PingFang SC Semibold,PingFang SC Semibold
 base.font,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,Hiragino Sans W1,PingFang SC Light
+title.width,58,,,,,,,,,
+title2,Life Expectancy vs Health expenditure,,,,,,,,,
+subtitle,In 2014,,,,,,,,,
+y.lab2,Life Expectancy,,,,,,,,,
+x.lab2b,"(adjusted for inflation, at PPP constant 2011 USD)",,,,,,,,,
+he.tp2,USD*,,,,,,,,,
+le.tp2,years,,,,,,,,,
+gdp.tp,GDP per capita*,,,,,,,,,
+legend.key,Click to show or hide,Cliquez pour masquer ou afficher,Anklicken zum Aus- oder Einblenden,Clicca per nascondere o mostrare,Clique para ocultar ou ver,اضغط للتغطية أو للإظهار,"Кликните, чтобы показать или скрыть",Pulsar para mostrar u ocultar,クリックで表示・非表示の切り替えができます,点击打开或收起
+source2.name,World Bank,,,,,,,,,
+source2.url,http://data.worldbank.org/indicator/SH.XPD.PCAP.PP.KD,,,,,,,,,
+footer.tp,* at purchasing power parity (constant 2011 international USD),,,,,,,,,

@@ -1593,7 +1593,7 @@ dd %&lt;&gt;% filter(year %in% years)
 
 # create a list of data frame for each year
 ddd &lt;- split(dd, dd$year)
-ddd &lt;- c(ddd, ddd[length(ddd)], ddd[length(ddd)], ddd[length(ddd)])
+ddd &lt;- c(ddd, ddd[length(ddd)], ddd[length(ddd)], ddd[length(ddd)], ddd[length(ddd)], ddd[length(ddd)], ddd[length(ddd)], ddd[length(ddd)],  ddd[length(ddd)],  ddd[length(ddd)])
 
 tf &lt;- tween_states(ddd, tweenlength = 1, statelength = 1, 
                    ease = c('quadratic-in-out'), 
@@ -1620,30 +1620,35 @@ for(lang in colnames(txt)) {
   ) + 
     geom_text(
       data = time.lab, aes(x = x, y = y, label = year, frame  = .frame), 
-      size = 90, hjust = 1, vjust = 0, family = txt['title.font', lang], 
-      colour = &quot;#ecf2f9&quot;, alpha = 0.7)   +
+      size = 80, hjust = 1, vjust = 0, family = txt['title.font', lang], 
+      colour = &quot;#e5dbcd&quot;, alpha = 0.4)   +
     geom_text(
-      aes(x = he, y = le, label = label, frame  = .frame), 
-      hjust = 0, nudge_x = 100, family = txt['base.font', lang], size = 5, alpha  = 0.7
+      aes(x = he, y = le, label = label, frame  = .frame, colour = iso2c), 
+      hjust = 0, nudge_x = 100, family = txt['base.font', lang], size = 5, alpha  = 0.9
     ) +
     geom_path(aes( group = iso2c, colour = iso2c, cumulative = TRUE), size = 0.3) + 
     geom_point(aes( group = iso2c, colour = iso2c), size = 2.5) +
-    sTheme(base_size = 26, base_family = txt['base.font', lang], title_family =  txt['title.font', lang], 
+    sTheme(base_size = 20, base_family = txt['base.font', lang], title_family =  txt['title.font', lang], 
            subtitle = txt['base.font', lang]) +
-    theme(plot.margin = unit(c(0.3, 0, 0.3, 0.3), &quot;lines&quot;)) +
+    theme(plot.margin = unit(c(0.3, 0, 0.7, 0.3), &quot;lines&quot;)) +
     scale_x_continuous(
       breaks = scales::pretty_breaks(n = 10),
       limits = xlim,
       labels = scales::dollar,
+      expand = c(0, 0.01),
       name = paste0(txt[&quot;x.lab&quot;, lang], &quot;\n&quot;, txt[&quot;x.lab2&quot;, lang])) +
     scale_y_continuous(
       limits = ylim, name = txt[&quot;y.lab&quot;, lang], 
       breaks = scales::pretty_breaks(n = 10)
     ) + 
     scale_color_manual(values = swi_rpal) +
-    labs(title = txt['main.title', lang], subtitle =  txt['descr', lang])
+    labs(
+      title = paste0(strwrap(txt['main.title', lang], width = 60, prefix = &quot;\n&quot;, initial = &quot;&quot;), collapse = &quot;&quot;), 
+      subtitle =  txt['descr', lang],
+      caption = paste0(txt['source', lang], &quot;: &quot;, txt['source.name', lang], &quot; | &quot;, txt['footer', lang], &quot; | swissinfo.ch&quot;)
+      )
   
-  animation::ani.options(interval = 1/10)
+  animation::ani.options(interval = ani.interval)
   gg_animate(p, outfile, title_frame = F, ani.width = 640 * 1.2, 
              ani.height = 640 * 1.2)
 
@@ -1903,28 +1908,56 @@ for(lang in colnames(txt)) {
 
 ## Warning: Removed 112 rows containing missing values (geom_path).
 
+## Warning: Removed 112 rows containing missing values (geom_path).
+
+## Warning: Removed 112 rows containing missing values (geom_path).
+
+## Warning: Removed 112 rows containing missing values (geom_path).
+
+## Warning: Removed 112 rows containing missing values (geom_path).
+
+## Warning: Removed 112 rows containing missing values (geom_path).
+
+## Warning: Removed 112 rows containing missing values (geom_path).
+
+## Warning: Removed 112 rows containing missing values (geom_path).
+
+## Warning: Removed 112 rows containing missing values (geom_path).
+
+## Warning: Removed 112 rows containing missing values (geom_path).
+
+## Warning: Removed 112 rows containing missing values (geom_path).
+
+## Warning: Removed 112 rows containing missing values (geom_path).
+
+## Warning: Removed 112 rows containing missing values (geom_path).
+
 ## Warning: Removed 112 rows containing missing values (geom_path).</code></pre>
 <pre><code>## Executing: 
-## 'convert' -loop 0 -delay 10 Rplot1.png Rplot2.png Rplot3.png
-##     Rplot4.png Rplot5.png Rplot6.png Rplot7.png Rplot8.png
-##     Rplot9.png Rplot10.png Rplot11.png Rplot12.png Rplot13.png
-##     Rplot14.png Rplot15.png Rplot16.png Rplot17.png Rplot18.png
-##     Rplot19.png Rplot20.png Rplot21.png Rplot22.png Rplot23.png
-##     Rplot24.png Rplot25.png Rplot26.png Rplot27.png Rplot28.png
-##     Rplot29.png Rplot30.png Rplot31.png Rplot32.png Rplot33.png
-##     Rplot34.png Rplot35.png Rplot36.png Rplot37.png Rplot38.png
-##     Rplot39.png Rplot40.png Rplot41.png Rplot42.png Rplot43.png
-##     Rplot44.png Rplot45.png Rplot46.png Rplot47.png Rplot48.png
-##     Rplot49.png Rplot50.png Rplot51.png Rplot52.png Rplot53.png
-##     Rplot54.png Rplot55.png Rplot56.png Rplot57.png Rplot58.png
-##     Rplot59.png Rplot60.png Rplot61.png Rplot62.png Rplot63.png
-##     Rplot64.png Rplot65.png Rplot66.png Rplot67.png Rplot68.png
-##     Rplot69.png Rplot70.png Rplot71.png Rplot72.png Rplot73.png
-##     Rplot74.png Rplot75.png Rplot76.png Rplot77.png Rplot78.png
-##     Rplot79.png Rplot80.png Rplot81.png Rplot82.png Rplot83.png
-##     Rplot84.png Rplot85.png Rplot86.png Rplot87.png Rplot88.png
-##     Rplot89.png Rplot90.png Rplot91.png Rplot92.png Rplot93.png
-##     Rplot94.png Rplot95.png 'animated_healthcareEvsLifeE_EN.gif'</code></pre>
+## 'convert' -loop 0 -delay 14.2857142857143 Rplot1.png Rplot2.png
+##     Rplot3.png Rplot4.png Rplot5.png Rplot6.png Rplot7.png
+##     Rplot8.png Rplot9.png Rplot10.png Rplot11.png Rplot12.png
+##     Rplot13.png Rplot14.png Rplot15.png Rplot16.png Rplot17.png
+##     Rplot18.png Rplot19.png Rplot20.png Rplot21.png Rplot22.png
+##     Rplot23.png Rplot24.png Rplot25.png Rplot26.png Rplot27.png
+##     Rplot28.png Rplot29.png Rplot30.png Rplot31.png Rplot32.png
+##     Rplot33.png Rplot34.png Rplot35.png Rplot36.png Rplot37.png
+##     Rplot38.png Rplot39.png Rplot40.png Rplot41.png Rplot42.png
+##     Rplot43.png Rplot44.png Rplot45.png Rplot46.png Rplot47.png
+##     Rplot48.png Rplot49.png Rplot50.png Rplot51.png Rplot52.png
+##     Rplot53.png Rplot54.png Rplot55.png Rplot56.png Rplot57.png
+##     Rplot58.png Rplot59.png Rplot60.png Rplot61.png Rplot62.png
+##     Rplot63.png Rplot64.png Rplot65.png Rplot66.png Rplot67.png
+##     Rplot68.png Rplot69.png Rplot70.png Rplot71.png Rplot72.png
+##     Rplot73.png Rplot74.png Rplot75.png Rplot76.png Rplot77.png
+##     Rplot78.png Rplot79.png Rplot80.png Rplot81.png Rplot82.png
+##     Rplot83.png Rplot84.png Rplot85.png Rplot86.png Rplot87.png
+##     Rplot88.png Rplot89.png Rplot90.png Rplot91.png Rplot92.png
+##     Rplot93.png Rplot94.png Rplot95.png Rplot96.png Rplot97.png
+##     Rplot98.png Rplot99.png Rplot100.png Rplot101.png
+##     Rplot102.png Rplot103.png Rplot104.png Rplot105.png
+##     Rplot106.png Rplot107.png
+##     'animated_healthcareEvsLifeE_EN.gif'</code></pre>
 <pre><code>## Output at: animated_healthcareEvsLifeE_EN.gif</code></pre>
 <p>```</p>
 </div>

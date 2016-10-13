@@ -28,20 +28,13 @@ output:
 * [HALE](http://apps.who.int/gho/data/view.main.HALEXv?lang=en)
 
 
-## Stories
-
-* [RTS info](http://www.rts.ch/info/economie/8078251-le-prix-d-une-vie-se-situerait-autour-des-200-000-francs-par-an.html)
-* [Economist](http://www.economist.com/blogs/economist-explains/2014/06/economist-explains-16)
-
-## Snippets
-
-*  Health care spending per capita has risen by over 70% in real terms since the early 1990s. This is reflected in a significantly healthier population – as shown by increased life expectancy and lower mortality for diseases such as cancer [OECD](https://www.oecd.org/eco/growth/46508904.pdf)
-
-
 ```{r setup, include=FALSE}
 testGif <- F
 downloadData <- F
 plotTest <- F
+
+ani.interval <- 1/7
+
 
 
 translation.file <- "input/healthcare expenditure vs life expectancy - Sheet1.csv"
@@ -143,6 +136,8 @@ sTheme <- function(
 ) {
   swi_theme(base_size = base_size, title_family = title_family, subtitle = subtitle, base_family = base_family) + 
   theme(
+    plot.title = element_text(family = title_family, size = base_size * 1.3, margin=margin(b=13), lineheight = 0.8),
+    plot.caption = element_text(size = base_size * 0.6, hjust=0, margin=margin(t=13), face = "italic"),
     axis.line.y = element_blank(), 
     legend.position = "none"
     ) 
@@ -213,7 +208,7 @@ dd %<>% filter(year %in% years)
 
 # create a list of data frame for each year
 ddd <- split(dd, dd$year)
-ddd <- c(ddd, ddd[length(ddd)], ddd[length(ddd)], ddd[length(ddd)])
+ddd <- c(ddd, ddd[length(ddd)], ddd[length(ddd)], ddd[length(ddd)], ddd[length(ddd)], ddd[length(ddd)], ddd[length(ddd)], ddd[length(ddd)],  ddd[length(ddd)],  ddd[length(ddd)])
 
 tf <- tween_states(ddd, tweenlength = 1, statelength = 1, 
                    ease = c('quadratic-in-out'), 
@@ -240,30 +235,35 @@ for(lang in colnames(txt)) {
   ) + 
     geom_text(
       data = time.lab, aes(x = x, y = y, label = year, frame  = .frame), 
-      size = 90, hjust = 1, vjust = 0, family = txt['title.font', lang], 
-      colour = "#ecf2f9", alpha = 0.7)   +
+      size = 80, hjust = 1, vjust = 0, family = txt['title.font', lang], 
+      colour = "#e5dbcd", alpha = 0.4)   +
     geom_text(
-      aes(x = he, y = le, label = label, frame  = .frame), 
-      hjust = 0, nudge_x = 100, family = txt['base.font', lang], size = 5, alpha  = 0.7
+      aes(x = he, y = le, label = label, frame  = .frame, colour = iso2c), 
+      hjust = 0, nudge_x = 100, family = txt['base.font', lang], size = 5, alpha  = 0.9
     ) +
     geom_path(aes( group = iso2c, colour = iso2c, cumulative = TRUE), size = 0.3) + 
     geom_point(aes( group = iso2c, colour = iso2c), size = 2.5) +
-    sTheme(base_size = 26, base_family = txt['base.font', lang], title_family =  txt['title.font', lang], 
+    sTheme(base_size = 20, base_family = txt['base.font', lang], title_family =  txt['title.font', lang], 
            subtitle = txt['base.font', lang]) +
-    theme(plot.margin = unit(c(0.3, 0, 0.3, 0.3), "lines")) +
+    theme(plot.margin = unit(c(0.3, 0, 0.7, 0.3), "lines")) +
     scale_x_continuous(
       breaks = scales::pretty_breaks(n = 10),
       limits = xlim,
       labels = scales::dollar,
+      expand = c(0, 0.01),
       name = paste0(txt["x.lab", lang], "\n", txt["x.lab2", lang])) +
     scale_y_continuous(
       limits = ylim, name = txt["y.lab", lang], 
       breaks = scales::pretty_breaks(n = 10)
     ) + 
     scale_color_manual(values = swi_rpal) +
-    labs(title = txt['main.title', lang], subtitle =  txt['descr', lang])
+    labs(
+      title = paste0(strwrap(txt['main.title', lang], width = 60, prefix = "\n", initial = ""), collapse = ""), 
+      subtitle =  txt['descr', lang],
+      caption = paste0(txt['source', lang], ": ", txt['source.name', lang], " | ", txt['footer', lang], " | swissinfo.ch")
+      )
   
-  animation::ani.options(interval = 1/8)
+  animation::ani.options(interval = ani.interval)
   gg_animate(p, outfile, title_frame = F, ani.width = 640 * 1.2, 
              ani.height = 640 * 1.2)
 
