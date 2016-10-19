@@ -33,7 +33,7 @@ testGif <- F
 downloadData <- F
 plotTest <- F
 
-ani.interval <- 1/7
+ani.interval <- 1/5
 
 
 
@@ -118,7 +118,7 @@ df %>% group_by(iso3c) %>% summarise(nVal = length(he) )
 
 # test plot
 ylim <-  c(70, 85)
-xlim <- c(0, 10000)
+xlim <- c(0, 9500)
 
 # remove rows with both NA values
 df.lab <- df[which((!is.na(df$he) & !is.na(df$le))),] %>% arrange(year)
@@ -202,33 +202,36 @@ years <- by(dd, dd$iso2c, function(ddd) ddd[which(!is.na(ddd$he) & !is.na(ddd$le
 dd %<>% filter(year %in% years)
 
 # keep only one year data every 2 years
-# years <- sort(unique(dd$year))
-# years.sub <- seq(min(years), max(years), 2)
-# dd <- dd %>% filter(year %in% years.sub)
+years <- sort(unique(dd$year))
+years.sub <- seq(min(years), max(years), 2)
+dd <- dd %>% filter(year %in% years.sub)
 
 # create a list of data frame for each year
 ddd <- split(dd, dd$year)
-ddd <- c(ddd, ddd[length(ddd)], ddd[length(ddd)], ddd[length(ddd)], ddd[length(ddd)], ddd[length(ddd)], ddd[length(ddd)], ddd[length(ddd)],  ddd[length(ddd)],  ddd[length(ddd)])
+ddd <- c(ddd, rep(ddd[length(ddd)], 20))
 
 tf <- tween_states(ddd, tweenlength = 1, statelength = 1, 
                    ease = c('quadratic-in-out'), 
                    nframes = 60) 
 time.lab <- tf %>% select(year, .frame) %>% filter(year %in% years)
 time.lab <- time.lab[!duplicated(time.lab),]
-time.lab$x <- 9900
+time.lab$x <- 9450
 time.lab$y <- 70
 tf <- tf %<>% select(-year)
 
 for(lang in colnames(txt)) {
 
   dddd <- tf
-  outfile <-  paste0("animated_healthcareEvsLifeE_", lang, ifelse(testGif, "_test", ""), ".gif")
+  outfile <-  paste0("01_animated_healthcareEvsLifeE_", lang, ifelse(testGif, "_test", ""), ".gif")
   
   dddd$label <- countryTranslation(as.character(dddd$iso2c), lang)[,-1]
   if(any(is.na(dddd$label))) {
     stop("\nSome country translations are missing!")
   }
   
+  footer2 <- paste0("\n", txt['footer.b', lang], " ", txt['footer.c', lang])
+  footer2 <-paste0(strwrap(footer2, width = 190, prefix = "\n"), collapse = "")
+   
   p <- ggplot(
     data = dddd, 
     aes(x = he, y = le, frame = .frame)
@@ -239,18 +242,18 @@ for(lang in colnames(txt)) {
       colour = "#e5dbcd", alpha = 0.4)   +
     geom_text(
       aes(x = he, y = le, label = label, frame  = .frame, colour = iso2c), 
-      hjust = 0, nudge_x = 100, family = txt['base.font', lang], size = 5, alpha  = 0.9
+      hjust = 0, nudge_x = 30, nudge_y = 0.3, family = txt['base.font', lang], size = 5, alpha  = 0.9
     ) +
     geom_path(aes( group = iso2c, colour = iso2c, cumulative = TRUE), size = 0.3) + 
     geom_point(aes( group = iso2c, colour = iso2c), size = 2.5) +
     sTheme(base_size = 20, base_family = txt['base.font', lang], title_family =  txt['title.font', lang], 
            subtitle = txt['base.font', lang]) +
-    theme(plot.margin = unit(c(0.3, 0, 0.7, 0.3), "lines")) +
+    theme(plot.margin = unit(c(0.3, 1.5, 0.2, 0.7), "lines")) +
     scale_x_continuous(
       breaks = scales::pretty_breaks(n = 10),
       limits = xlim,
       labels = scales::dollar,
-      expand = c(0, 0.01),
+      expand = c(0, 0.1),
       name = paste0(txt["x.lab", lang], "\n", txt["x.lab2", lang])) +
     scale_y_continuous(
       limits = ylim, name = txt["y.lab", lang], 
@@ -258,14 +261,14 @@ for(lang in colnames(txt)) {
     ) + 
     scale_color_manual(values = swi_rpal) +
     labs(
-      title = paste0(strwrap(txt['main.title', lang], width = 60, prefix = "\n", initial = ""), collapse = ""), 
+      title = paste0(strwrap(txt['main.title', lang], width = 66, prefix = "\n", initial = ""), collapse = ""), 
       subtitle =  txt['descr', lang],
-      caption = paste0(txt['source', lang], ": ", txt['source.name', lang], " | ", txt['footer', lang], " | swissinfo.ch")
+      caption = paste0(txt['source', lang], ": ", txt['source.name', lang], " | ", txt['footer.a', lang], " | swissinfo.ch", "\n", footer2)
       )
   
   animation::ani.options(interval = ani.interval)
-  gg_animate(p, outfile, title_frame = F, ani.width = 640 * 1.2, 
-             ani.height = 640 * 1.2)
+  gg_animate(p, outfile, title_frame = F, ani.width = 640 * 1.4, 
+             ani.height = 640 * 1.4)
 
 
 }

@@ -11,6 +11,7 @@ output:
 
 # Data links
 
+* [health expenditure in %GDP](http://data.worldbank.org/indicator/SH.XPD.TOTL.ZS)
 * [health expenditure per capita](http://data.worldbank.org/indicator/SH.XPD.PCAP.PP.KD)
   * Total health expenditure is the sum of public and private health expenditures as a ratio of total population. It covers the provision of health services (preventive and curative), family planning activities, nutrition activities, and emergency aid designated for health but does not include provision of water and sanitation. Data are in international dollars converted using 2011 purchasing power parity (PPP) rates. 
 
@@ -23,19 +24,16 @@ output:
 ```{r setup, include=FALSE}
 downloadData <- F
 
-#iso3.sub <- c("NOR", "CHE", "ITA", "FRA", "JPN", "GBR", "ESP", "USA", "CHN", "IND", "BRA", "RUS")
-# iso3.sub <- c("CHE", "ITA", "FRA", "JPN", "GBR", "ESP", "USA", "CHN", "DEU", "CAN")
-# iso3.sub <- c("CHE", "FRA", "JPN", "KOR", "GBR", "ESP", "PRT", "USA", "DEU", "CAN", "SWE", "TUR")
-iso2.label <- c("CH", "IT", "FR", "JP", "GB", "ES", "US", "CN", "DE", "TR", "MA", "PT", "BR", "RU")
+iso2.label <- c("CH", "IT", "FR", "JP", "GB", "ES", "US", "CN", "DE", "TR", "PT", "BR", "RU", "ZA")
 
 
 translation.file <- "input/healthcare expenditure vs life expectancy - Sheet1.csv"
 
-wb.indicators <- c('SP.DYN.LE00.IN', 'SH.XPD.PCAP.PP.KD', 'NY.GDP.PCAP.PP.KD')
+wb.indicators <- c('SP.DYN.LE00.IN', 'SH.XPD.PCAP.PP.KD', 'SH.XPD.TOTL.ZS')
 
 health.datafile <- "input/healthExpenditure_wb.csv"
 le.datafife <- "input/lifeExpectancy_wb.csv"
-gdp.datafile <- "input/gdpPerCapita_PPP_constant2011USD.csv"
+gdp.datafile <- "input/healthExpenditure_asPercGDP_wb.csv"
 
 library(readr)
 library(tidyr)
@@ -46,7 +44,6 @@ library(ggplot2)
 library(swiMap)
 library(swiTheme)
 library(forcats)
-library(broom)
 ### Getting data in packages
 
 library(WDI)
@@ -59,14 +56,11 @@ library(shiny)
 library(swiRcharts)
 library(rCharts)
 library(highcharter)
-
-library(viridisLite)
 ```
 
 
 ```{r get data}
 if(downloadData) {
-
   #helper
   getWBdata <- function(ind.code, ind.name = NULL) {
     if(is.null(ind.name)) { ind.name <- ind.code }
@@ -162,27 +156,27 @@ dd <- dd[-which(is.na(countryTranslation(dd$iso2c, lang)[,2])),]
 
 
 dd$tooltip <- paste0(
-  '<table cellpadding="1" style="line-height:1.2">',
+  '<table cellpadding="1" style="line-height:0.9">',
   '<tr><td><strong>', countryTranslation(dd$iso2c, lang)[,2],'</strong></td></tr>',
   '<tr><td><i><small>', dd$reg, '</i></small></td></tr>',
   '<tr><td>', txt["x.lab",lang], ': <strong>', round(dd$he), '</strong> ', txt["he.tp2",lang], '</td></tr>',
-  '<tr><td>', txt["y.lab2",lang], ": <strong>", round(dd$le), '</strong> ', txt["le.tp2",lang], '</td></tr>',
- # '<tr><td>', txt["gdp.tp",lang], ": ", round(dd$gdp), '</td></tr>',
+  '<tr><td>', txt["gdp.tp",lang], ": <strong>", round(dd$gdp, 1), '</strong></td></tr>',
+  '<tr><td>', txt["y.lab2",lang], ": <strong>", round(dd$le, 1), '</strong> ', txt["le.tp2",lang], '</td></tr>',
   '</table>')
   
 hSeries <- hSeries2(
   data.frame(
     x = dd$he,
     y = dd$le,
-  #  z = dd$gdp,
+    z = dd$gdp,
     series = dd$reg,
     name = dd$label,
     tooltip = dd$tooltip
   ), 
   "series")
 
-bc <- highchart(height = 580) %>%
-  hc_chart(type = "bubble", spacing = c(12, 4, 4, 0)) %>%
+bc <- highchart(height = 500) %>%
+  hc_chart(type = "bubble", spacing = c(12, 4, 0, 0)) %>%
   hc_add_series_list(hSeries) %>% 
   hc_tooltip(
     formatter = JS("function() { return this.point.tooltip;}"), 
@@ -190,9 +184,17 @@ bc <- highchart(height = 580) %>%
     borderWidth = 2,
     padding = 3
   ) %>%
-  hc_legend(enabled = T, title = list(text = txt['legend.key', lang])) %>% 
+  hc_legend(
+    enabled = T, 
+    title = list(text = txt['legend.key', lang]),
+    align = 'right',
+    verticalAlign = 'bottom',
+    x = 10,
+    y = -68,
+    floating = T
+  ) %>% 
   hc_add_theme(hc_theme_swi) %>%
-   hc_colors(swi_rpal[-c(1,2,3)])
+   hc_colors(swi_rpal[-c(2,3,4,6)])
 
 
 bc %<>% hc_yAxis(
@@ -200,23 +202,24 @@ bc %<>% hc_yAxis(
   opposite = ifelse(lang == "AR", TRUE, FALSE)
 ) %>%
   hc_xAxis(
-    title = list(text = paste0(txt['x.lab', lang], "*")), 
+    title = list(text = paste0(txt['x.lab', lang])), 
     labels = list(format =  '{value:,.0f} $'), 
     reversed = ifelse(lang == "AR", TRUE, FALSE)
   ) %>%
   hc_plotOptions(
     bubble = list(
-      maxSize = "4%",
-      marker = list(lineWidth = 0),
+      maxSize = "5.5%",
+      minSize = "0.3%",
+      marker = list(lineWidth = 0, fillOpacity = 0.5),
       dataLabels = list(
         enabled = T, 
+        allowOverlap = T,
         format = '{point.name}', 
         style = list(
           textShadow = F,
-          fontSize = "0.85em",
+          fontSize = "0.82em",
           verticalAlign = "middle",
-          fontWeight = "normal"#,
-          #color = "black"
+          fontWeight = "normal"
         )
       ))
   )
@@ -235,10 +238,10 @@ save_html(
       div(class = "descr", txt['subtitle', lang]),
       div(class="graphic", bc),
       div(id = "cite", HTML(source)),
-      div(class = "footer", txt['footer.tp', lang]),
+      div(class = "footer", HTML(paste0(txt['footer.tp', lang], " ", txt['footer.c', lang]))),
       HTML(iframeresizer)
     )
-  ), file = paste0("healthEVsLifeE_bubble_", lang, ".html"), libdir = "js", background = "#f2f2f2"
+  ), file = paste0("02_healthEVsLifeE_bubble_", lang, ".html"), libdir = "js" #, background = "#f2f2f2"
 )     
     
 

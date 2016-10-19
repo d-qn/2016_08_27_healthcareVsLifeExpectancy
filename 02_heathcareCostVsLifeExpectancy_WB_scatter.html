@@ -133,6 +133,7 @@ $(document).ready(function () {
 <div id="data-links" class="section level1">
 <h1>Data links</h1>
 <ul>
+<li><a href="http://data.worldbank.org/indicator/SH.XPD.TOTL.ZS">health expenditure in %GDP</a></li>
 <li><a href="http://data.worldbank.org/indicator/SH.XPD.PCAP.PP.KD">health expenditure per capita</a></li>
 <li>Total health expenditure is the sum of public and private health expenditures as a ratio of total population. It covers the provision of health services (preventive and curative), family planning activities, nutrition activities, and emergency aid designated for health but does not include provision of water and sanitation. Data are in international dollars converted using 2011 purchasing power parity (PPP) rates.</li>
 </ul>
@@ -142,7 +143,6 @@ $(document).ready(function () {
 <li><a href="https://github.com/jbkunst/highcharter/issues/54">access extra variable in tooltip</a></li>
 </ul>
 <pre class="r"><code>if(downloadData) {
-
   #helper
   getWBdata &lt;- function(ind.code, ind.name = NULL) {
     if(is.null(ind.name)) { ind.name &lt;- ind.code }
@@ -267,27 +267,27 @@ dd &lt;- dd[-which(is.na(countryTranslation(dd$iso2c, lang)[,2])),]
 
 
 dd$tooltip &lt;- paste0(
-  '&lt;table cellpadding=&quot;1&quot; style=&quot;line-height:1.2&quot;&gt;',
+  '&lt;table cellpadding=&quot;1&quot; style=&quot;line-height:0.9&quot;&gt;',
   '&lt;tr&gt;&lt;td&gt;&lt;strong&gt;', countryTranslation(dd$iso2c, lang)[,2],'&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;',
   '&lt;tr&gt;&lt;td&gt;&lt;i&gt;&lt;small&gt;', dd$reg, '&lt;/i&gt;&lt;/small&gt;&lt;/td&gt;&lt;/tr&gt;',
   '&lt;tr&gt;&lt;td&gt;', txt[&quot;x.lab&quot;,lang], ': &lt;strong&gt;', round(dd$he), '&lt;/strong&gt; ', txt[&quot;he.tp2&quot;,lang], '&lt;/td&gt;&lt;/tr&gt;',
-  '&lt;tr&gt;&lt;td&gt;', txt[&quot;y.lab2&quot;,lang], &quot;: &lt;strong&gt;&quot;, round(dd$le), '&lt;/strong&gt; ', txt[&quot;le.tp2&quot;,lang], '&lt;/td&gt;&lt;/tr&gt;',
- # '&lt;tr&gt;&lt;td&gt;', txt[&quot;gdp.tp&quot;,lang], &quot;: &quot;, round(dd$gdp), '&lt;/td&gt;&lt;/tr&gt;',
+  '&lt;tr&gt;&lt;td&gt;', txt[&quot;gdp.tp&quot;,lang], &quot;: &lt;strong&gt;&quot;, round(dd$gdp, 1), '&lt;/strong&gt;&lt;/td&gt;&lt;/tr&gt;',
+  '&lt;tr&gt;&lt;td&gt;', txt[&quot;y.lab2&quot;,lang], &quot;: &lt;strong&gt;&quot;, round(dd$le, 1), '&lt;/strong&gt; ', txt[&quot;le.tp2&quot;,lang], '&lt;/td&gt;&lt;/tr&gt;',
   '&lt;/table&gt;')
   
 hSeries &lt;- hSeries2(
   data.frame(
     x = dd$he,
     y = dd$le,
-  #  z = dd$gdp,
+    z = dd$gdp,
     series = dd$reg,
     name = dd$label,
     tooltip = dd$tooltip
   ), 
   &quot;series&quot;)
 
-bc &lt;- highchart(height = 580) %&gt;%
-  hc_chart(type = &quot;bubble&quot;, spacing = c(12, 4, 4, 0)) %&gt;%
+bc &lt;- highchart(height = 500) %&gt;%
+  hc_chart(type = &quot;bubble&quot;, spacing = c(12, 4, 0, 0)) %&gt;%
   hc_add_series_list(hSeries) %&gt;% 
   hc_tooltip(
     formatter = JS(&quot;function() { return this.point.tooltip;}&quot;), 
@@ -295,9 +295,17 @@ bc &lt;- highchart(height = 580) %&gt;%
     borderWidth = 2,
     padding = 3
   ) %&gt;%
-  hc_legend(enabled = T, title = list(text = txt['legend.key', lang])) %&gt;% 
+  hc_legend(
+    enabled = T, 
+    title = list(text = txt['legend.key', lang]),
+    align = 'right',
+    verticalAlign = 'bottom',
+    x = 10,
+    y = -68,
+    floating = T
+  ) %&gt;% 
   hc_add_theme(hc_theme_swi) %&gt;%
-   hc_colors(swi_rpal[-c(1,2,3)])
+   hc_colors(swi_rpal[-c(2,3,4,6)])
 
 
 bc %&lt;&gt;% hc_yAxis(
@@ -305,23 +313,24 @@ bc %&lt;&gt;% hc_yAxis(
   opposite = ifelse(lang == &quot;AR&quot;, TRUE, FALSE)
 ) %&gt;%
   hc_xAxis(
-    title = list(text = paste0(txt['x.lab', lang], &quot;*&quot;)), 
+    title = list(text = paste0(txt['x.lab', lang])), 
     labels = list(format =  '{value:,.0f} $'), 
     reversed = ifelse(lang == &quot;AR&quot;, TRUE, FALSE)
   ) %&gt;%
   hc_plotOptions(
     bubble = list(
-      maxSize = &quot;4%&quot;,
-      marker = list(lineWidth = 0),
+      maxSize = &quot;5.5%&quot;,
+      minSize = &quot;0.3%&quot;,
+      marker = list(lineWidth = 0, fillOpacity = 0.5),
       dataLabels = list(
         enabled = T, 
+        allowOverlap = T,
         format = '{point.name}', 
         style = list(
           textShadow = F,
-          fontSize = &quot;0.85em&quot;,
+          fontSize = &quot;0.82em&quot;,
           verticalAlign = &quot;middle&quot;,
-          fontWeight = &quot;normal&quot;#,
-          #color = &quot;black&quot;
+          fontWeight = &quot;normal&quot;
         )
       ))
   )
@@ -340,10 +349,10 @@ save_html(
       div(class = &quot;descr&quot;, txt['subtitle', lang]),
       div(class=&quot;graphic&quot;, bc),
       div(id = &quot;cite&quot;, HTML(source)),
-      div(class = &quot;footer&quot;, txt['footer.tp', lang]),
+      div(class = &quot;footer&quot;, HTML(paste0(txt['footer.tp', lang], &quot; &quot;, txt['footer.c', lang]))),
       HTML(iframeresizer)
     )
-  ), file = paste0(&quot;healthEVsLifeE_bubble_&quot;, lang, &quot;.html&quot;), libdir = &quot;js&quot;, background = &quot;#f2f2f2&quot;
+  ), file = paste0(&quot;02_healthEVsLifeE_bubble_&quot;, lang, &quot;.html&quot;), libdir = &quot;js&quot; #, background = &quot;#f2f2f2&quot;
 )     </code></pre>
 </div>
 </div>

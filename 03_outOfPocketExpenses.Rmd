@@ -1,0 +1,73 @@
+---
+title: "Out-of-pocket expenses as % health expenditure"
+author: "Duc-Quang Nguyen | swissinfo.ch"
+date: " 2016"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    theme: simplex
+---
+
+```{r setup, include=FALSE}
+downloadData <- F
+
+iso2.subset <- c("CH", "IT", "FR", "JP", "GB", "ES", "US", "CN", "DE", "TR", "PT", "BR", "RU")
+iso2.subset <- c("Z4", "ZG", "ZJ", "EU", "XU", "8S", "1W", "CH")
+
+oope.datafile <- "input/outOfPocketExpenditure_wb.csv"
+oope.output <- "input/outOfPocketExpenditure_wb4DW.csv"
+
+library(readr)
+library(tidyr)
+library(dplyr)
+library(magrittr)
+library(countrycode)
+library(ggplot2)
+library(scales)
+library(swiMap)
+library(swiTheme)
+library(forcats)
+
+### Getting data in packages
+library(WDI)
+
+### Interactive 
+library(htmltools)
+library(shiny)
+library(swiRcharts)
+library(rCharts)
+```
+
+```{r get data}
+if(downloadData) {
+  ## get health expenditure data
+
+  # get life expectancy data
+  data.dl <- WDI(
+    indicator = 'SH.XPD.OOPC.TO.ZS',
+    start = 1950,  
+    end = 2016, 
+    extra = TRUE, 
+    cache = NULL
+  )
+  colnames(data.dl)[3] <- 'value'
+  oope.data <- data.dl %>% select(-capital, -longitude, -latitude, -lending)
+  
+  write_csv(oope.data, path = oope.datafile)  
+} else {
+  oope.data <- read_csv(oope.datafile)
+}
+```
+
+
+```{r wrangle}
+oope.data %>% filter(region == "Aggregates", year == 2014) %>% as.data.frame()
+oope.dw <- oope.data %>% filter(iso2c %in% iso2.subset, !is.na(value)) %>% 
+  select(country, value, year) %>% arrange(year)
+#ggplot(data = oope.dw) + geom_line(aes(x = year, y = value, group= country, colour = country))
+oope.dw %<>% spread(year, value)
+
+
+write.csv(oope.dw %>% select(country, `2014`), file= oope.output, row.names = F)
+```

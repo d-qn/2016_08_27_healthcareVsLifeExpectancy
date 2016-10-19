@@ -1,0 +1,69 @@
+---
+title: "09_explore_primeMaladie2017"
+author: "Duc-Quang Nguyen"
+date: "10/14/2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+data.file <- "data/Prämien_CH.csv"
+insurer.file <- "data/insurer_CH_01_10_2016.csv"
+
+library(readr)
+library(tidyr)
+library(dplyr)
+library(magrittr)
+library(countrycode)
+library(ggplot2)
+library(swiMap)
+library(swiTheme)
+library(forcats)
+
+library(forcats)
+library(viridis)
+library(ggiraph)
+```
+
+```{r load data}
+data.read <- read.csv(data.file)
+insurer <- read.csv(insurer.file)
+
+# basic exploration
+lapply(data.read, unique)
+
+data.read <- data.read %>% select(-Hoheitsgebiet, -Geschäftsjahr, -Erhebungsjahr)
+dd <- data.read %>% filter(Tarif == "BASE", Unfalleinschluss == "OHN-UNF", 
+                           Altersklasse == 'AKL-ERW', Franchise == 'FRA-500')
+
+# order canton by average prime 
+ddd <- dd %>% group_by(Kanton, Versicherer) %>% 
+  summarise(prime = mean(Prämie)) %>% ungroup()
+ct.ordered <- ddd %>% group_by(Kanton) %>% summarise(meanPrime = mean(prime)) %>% 
+  ungroup() %>% arrange(meanPrime) %>% select(Kanton) %>% unlist(use.names = F) %>% as.character()
+ddd$Kanton <- factor(ddd$Kanton, levels = ct.ordered)
+
+# order insurer by average prime
+insurer.ordered <- ddd %>% group_by(Kanton) %>% mutate( rk = rank(prime)) %>% ungroup()
+insurer.rank <- insurer.ordered %>% group_by(Versicherer) %>% summarise(meanRank = mean(rk)) %>% 
+  ungroup() %>% arrange(meanRank)
+insurer.ordered <- insurer.rank %>% select(Versicherer)  %>% unlist(use.names = F)
+
+names(insurer.ordered) <- insurer[match(insurer.ordered, insurer[,1]), 'shortName']
+ddd$insurerName <- factor(insurer[match(ddd$Versicherer,  insurer[,1]), 'shortName'], levels = names(insurer.ordered))
+ddd$insurerRank <- insurer.rank[match(ddd$Versicherer, insurer.rank$Versicherer), 'meanRank'] %>% unlist(use.names = F)
+
+gp <- ggplot(data = ddd) + 
+  geom_point(aes(x = Kanton, y = prime, group = insurerName, color = insurerRank), size = 0.2, alpha = 0.8) + 
+  geom_line_interactive(aes(x = Kanton, y = prime, group = insurerName, color = insurerRank, tooltip = insurerName, data_id = insurerName), size = 0.1, alpha = 0.2) + 
+  swi_theme(y_gridlines = F) + scale_color_viridis(option = "A")
+
+  #geom_point_interactive(aes(x = Kanton, y = prime, group = insurerName, color = insurerRank, tooltip = prime, data_id = insurerName), size = 0.2, alpha = 0.8)
+ggiraph(
+  code = {print(gp)}, 
+  hover_css = "stroke-width:1px;",  
+  width = 1, 
+  pointsize = 7,
+  fontname_sans = 'Open Sans Condensed'
+)
+```
