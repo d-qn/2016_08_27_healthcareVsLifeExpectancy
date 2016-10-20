@@ -1,0 +1,83 @@
+---
+title: "Out-of-pocket expenses as % health expenditure"
+author: "Duc-Quang Nguyen | swissinfo.ch"
+date: " 2016"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    theme: simplex
+---
+
+```{r setup, include=FALSE}
+downloadData <- F
+
+tables <- c('SH.XPD.PRIV.ZS', 'SH.XPD.PUBL.ZS')
+
+iso2.subset <- c("CH", "IT", "FR", "JP", "GB", "ES", "US", "CN", "DE", "TR", "PT", "BR", "RU", "IN")
+iso2.subset2 <- c("Z4", "ZG", "ZJ", "EU", "XU", "8S", "1W", "CH")
+
+
+
+heSource.datafile <- "input/privePublicFunding_healthGDP_all.csv"
+heSource.output <- "input//privePublicFunding_healthGDP.csv"
+
+library(readr)
+library(tidyr)
+library(dplyr)
+library(magrittr)
+library(countrycode)
+library(ggplot2)
+library(scales)
+library(swiMap)
+library(swiTheme)
+library(forcats)
+
+### Getting data in packages
+library(WDI)
+
+### Interactive 
+library(htmltools)
+library(shiny)
+library(swiRcharts)
+library(rCharts)
+```
+
+```{r get data}
+if(downloadData) {
+ fetch_wb_data <- function(indicator, name) {
+   data.dl <- WDI(
+     indicator = indicator,
+     start = 1950,  
+     end = 2016, 
+     extra = TRUE, 
+     cache = NULL
+   )
+   colnames(data.dl)[3] <- name
+   #data.dl$indicator <- name
+   data.dl %>% select(-capital, -longitude, -latitude, -lending)   
+ }
+ 
+ data.dl <- left_join( fetch_wb_data(tables[1], "private"),  fetch_wb_data(tables[2], "public"))
+ data <- data.dl %>% filter(!is.na(private) | !is.na(public))
+ 
+ write_csv(data, path = heSource.datafile)  
+} else {
+  data <- read_csv(heSource.datafile)
+}
+```
+
+
+```{r wrangle}
+dd <- data %>% filter(year == max(data$year)) %>% select(-year)
+dd %<>% filter(iso2c %in% c('CH', iso2.subset2)) %>% select(-income, iso3c)
+
+dd$reg <- ifelse(is.na(dd$region) | dd$region == 'Aggregates', 'region', 'countries' )
+
+dd %<>% select(-iso2c, -iso3c, -region) %>% arrange(reg)
+dd$sum <- dd$private + dd$public
+dd$sharePrivate <- dd$private / dd$sum
+dd %<>% arrange(desc(sharePrivate))
+
+write.csv(dd %>% select(country, private, public), file = heSource.output, row.names = F)
+```

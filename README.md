@@ -33,6 +33,10 @@ Le graphique interactif ci-dessous présente tous les pays en 2014
 
 L'assurance maladie de base en Suisse est obligatoire et donc universelle et
 
+[Bilan](http://www.bilan.ch/economie-plus-de-redaction/caisse-maladie-une-concurrence-limitee)
+* Comme la couverture de l’assurance de base est identique chez les acteurs de la branche, les assurés devraient logiquement choisir celle qui est la moins chère. Or, ce n’est pas le cas
+* Enfin, les assureurs n’ont pas intérêt à offrir des primes beaucoup trop basses par rapport à la concurrence. En 2014 et en 2015, Assura-Basis a ainsi enregistré l’arrivée de quelque 300  000 nouveaux affiliés, attirés par des conditions tarifaires très attractives. Or, en raison de cet afflux de clients, la compagnie romande a bouclé l’exercice 2015 sur une perte de 258 millions de francs et a été contrainte d’augmenter fortement ses primes 2016.
+
 * 57 assureurs en 2016
 
 
@@ -54,6 +58,7 @@ L'assurance maladie de base en Suisse est obligatoire et donc universelle et
 * [Economist](http://www.economist.com/blogs/economist-explains/2014/06/economist-explains-16)
 * [Bilan](http://www.bilan.ch/economie-plus-de-redaction/caisse-maladie-une-concurrence-limitee)
 * [le Temps Primes ont doublé en 20 ans 2014](https://www.letemps.ch/no-section/2014/09/25/primes-ont-double-20-ans-fini)
+* [TDG](http://www.tdg.ch/geneve/actu-genevoise/Couts-de-la-sante-Geneve-navigue-sans-visibilite/story/11948894)
 
 ### 
 

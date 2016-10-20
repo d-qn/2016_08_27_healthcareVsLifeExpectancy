@@ -43,7 +43,6 @@ translation.file <- "input/healthcare expenditure vs life expectancy - Sheet1.cs
 iso3.sub <- c("CHE", "ITA", "FRA", "JPN", "GBR", "ESP", "USA", "CHN", "DEU", "CAN")
 iso3.sub <- c("CHE", "FRA", "JPN", "KOR", "GBR", "ESP", "PRT", "USA", "DEU", "CAN", "SWE", "TUR")
 
-
 health.datafile <- "input/healthExpenditure_oecd.csv"
 le.datafife <- "input/lifeExpectancy_wb.csv"
 
