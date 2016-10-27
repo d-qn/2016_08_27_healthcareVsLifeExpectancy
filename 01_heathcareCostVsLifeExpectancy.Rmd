@@ -40,8 +40,9 @@ ani.interval <- 1/5
 translation.file <- "input/healthcare expenditure vs life expectancy - Sheet1.csv"
 
 #iso3.sub <- c("NOR", "CHE", "ITA", "FRA", "JPN", "GBR", "ESP", "USA", "CHN", "IND", "BRA", "RUS")
-iso3.sub <- c("CHE", "ITA", "FRA", "JPN", "GBR", "ESP", "USA", "CHN", "DEU", "CAN")
+
 iso3.sub <- c("CHE", "FRA", "JPN", "KOR", "GBR", "ESP", "PRT", "USA", "DEU", "CAN", "SWE", "TUR")
+iso3.sub <- c("CHE", "FRA", "JPN", "GBR", "ESP", "USA", "DEU")
 
 health.datafile <- "input/healthExpenditure_oecd.csv"
 le.datafife <- "input/lifeExpectancy_wb.csv"
@@ -122,7 +123,6 @@ xlim <- c(0, 9500)
 # remove rows with both NA values
 df.lab <- df[which((!is.na(df$he) & !is.na(df$le))),] %>% arrange(year)
 
-
 ```
 
 
@@ -170,10 +170,6 @@ tRange <- tRange[is.finite(tRange$start),] %>% as.data.frame()
 gp2 <- ggplot(df.all, aes(x = he, y = le)) + 
   geom_line(aes(group = iso2c), size = 0.1, colour = "grey") + 
   sTheme() + theme(plot.margin = unit(c(0.3, 0, 0.3, 0.3), "lines")) +
-  #   geom_label(
-  #   aes(x = 0, y = 85, label="Life Expectancy"), size = 6,
-  #   family = "OpenSans-CondensedLight", label.size = 0, nudge_x = 100
-  # ) + 
   theme(axis.line.y = element_blank()) + 
     geom_smooth(size = 0.2, method = "loess") +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 10), limits = xlim,
@@ -184,7 +180,6 @@ if(plotTest) gp2
 ```
 
 ```{r tweenr}
-
 dd <- df %>% select(-region, -income, -iso3c, -OBS_STATUS, -indicator)
 dd$country <- as.factor(dd$country)
 dd$iso2c <- as.factor(dd$iso2c)
@@ -199,20 +194,42 @@ if(testGif) {
 years <- by(dd, dd$iso2c, function(ddd) ddd[which(!is.na(ddd$he) & !is.na(ddd$le)),'year'] ) %>% 
   unlist(use.names = F) %>% unique() %>% sort()
 dd %<>% filter(year %in% years)
+dd$col <- swi_rpal[-c(3,5,7, 11)][dd$iso2c]
 
 # keep only one year data every 2 years
-years <- sort(unique(dd$year))
-years.sub <- seq(min(years), max(years), 2)
-dd <- dd %>% filter(year %in% years.sub)
+# years <- sort(unique(dd$year))
+# years.sub <- seq(min(years), max(years), 2)
+# dd <- dd %>% filter(year %in% years.sub)
 
+# create a data.frame with start, end values
+tRanges <- dd %>% group_by(iso2c, country) %>% 
+  filter(!is.na(he) & !is.na(le)) %>% arrange(year) %>%
+  summarise(tStart = first(year), tEnd = last(year)) %>%
+  ungroup()
+  
+if(length(unique(tRanges$tStart)) > 1 || length(unique(tRanges$tEnd)) > 1) {
+  stop()
+}
+tRanges <- range(tRanges$tStart, tRanges$tEnd)
+
+dd.seg <- dd %>% filter(year %in% tRanges) %>% arrange(year) %>%
+  group_by(iso2c, country, col) %>% 
+  summarise(x = first(he), xend = last(he), y = first(le), yend = last(le)) %>%
+  ungroup()
+
+dd.point <- dd %>% filter(year %in% tRanges)
+#dd.point[which(dd.point$year == min(tRanges)), 'col'] <- "white" 
+#dd.point [which(dd.point$year == max(tRanges)), 'col'] <- "black" 
 # create a list of data frame for each year
-ddd <- split(dd, dd$year)
-ddd <- c(ddd, rep(ddd[length(ddd)], 20))
 
-tf <- tween_states(ddd, tweenlength = 1, statelength = 1, 
-                   ease = c('quadratic-in-out'), 
-                   nframes = 60) 
-time.lab <- tf %>% select(year, .frame) %>% filter(year %in% years)
+ddd <- split(dd.point, dd.point$year)
+ddd <- c(ddd, rep(ddd[length(ddd)], 2), ddd[1])
+
+tf <- tween_states(
+  ddd, tweenlength = 1, statelength = 1.2, 
+  ease = c('quadratic-in-out'), nframes = 50
+) 
+time.lab <- tf %>% select(year, .frame) %>% filter(year %in% tRanges)
 time.lab <- time.lab[!duplicated(time.lab),]
 time.lab$x <- 9450
 time.lab$y <- 70
@@ -221,32 +238,49 @@ tf <- tf %<>% select(-year)
 for(lang in colnames(txt)) {
 
   dddd <- tf
-  outfile <-  paste0("01_animated_healthcareEvsLifeE_", lang, ifelse(testGif, "_test", ""), ".gif")
+  outfile <-  paste0("01_connectedScatter_healthcareEvsLifeE_", lang, ifelse(testGif, "_test", ""), ".gif")
   
   dddd$label <- countryTranslation(as.character(dddd$iso2c), lang)[,-1]
   if(any(is.na(dddd$label))) {
     stop("\nSome country translations are missing!")
   }
-  
+  dddd.label <- dddd %>% group_by(label, iso2c) %>%
+    summarise(he = max(he), le = max(le)) %>%
+    ungroup()
+  dddd.label <- cbind(dddd.label, dd.seg[match(dddd.label$iso2c, dd.seg$iso2c), 'col'])
+    
   footer2 <- paste0("\n", txt['footer.b', lang], " ", txt['footer.c', lang])
   footer2 <-paste0(strwrap(footer2, width = 190, prefix = "\n"), collapse = "")
    
   p <- ggplot(
     data = dddd, 
-    aes(x = he, y = le, frame = .frame)
+    aes(x = he, y = le)
   ) + 
-    geom_text(
-      data = time.lab, aes(x = x, y = y, label = year, frame  = .frame), 
-      size = 80, hjust = 1, vjust = 0, family = txt['title.font', lang], 
-      colour = "#e5dbcd", alpha = 0.4)   +
-    geom_text(
-      aes(x = he, y = le, label = label, frame  = .frame, colour = iso2c), 
-      hjust = 0, nudge_x = 30, nudge_y = 0.3, family = txt['base.font', lang], size = 5, alpha  = 0.9
+    geom_text( 
+      data = dddd.label,
+      aes(label = label, colour = col), hjust = 0, 
+      nudge_x = 50, nudge_xnudge_y = 1.2, alpha = 0.9,
+      family = txt['title.font', lang], size = 4
+    ) + 
+    geom_segment(
+      data = dd.seg, 
+      aes(x = x, xend = xend, y = y, yend = yend, 
+          group = iso2c, colour = col), size = 0.3, alpha = 0.8
     ) +
-    geom_path(aes( group = iso2c, colour = iso2c, cumulative = TRUE), size = 0.3) + 
-    geom_point(aes( group = iso2c, colour = iso2c), size = 2.5) +
-    sTheme(base_size = 20, base_family = txt['base.font', lang], title_family =  txt['title.font', lang], 
-           subtitle = txt['base.font', lang]) +
+    geom_line(data = dd,
+      aes(x = he, y = le, group = iso2c, colour = col), 
+      size = 0.3, linetype = "dashed", alpha = 0.9
+    ) + 
+    geom_point(aes(colour = col, group = iso2c, frame = .frame), size = 3.8, shape = 18, alpha = 0.9) +
+    geom_text(
+      data = time.lab, aes(x = x, y = y, label = year, frame  = .frame),
+      size = 80, hjust = 1, vjust = 0, family = txt['title.font', lang],
+      colour = "#e5dbcd", alpha = 0.3)   +
+    sTheme(
+      base_size = 20, base_family = txt['base.font', lang], 
+      title_family =  txt['title.font', lang], 
+      subtitle = txt['base.font', lang]
+    ) +
     theme(plot.margin = unit(c(0.3, 1.5, 0.2, 0.7), "lines")) +
     scale_x_continuous(
       breaks = scales::pretty_breaks(n = 10),
@@ -257,14 +291,52 @@ for(lang in colnames(txt)) {
     scale_y_continuous(
       limits = ylim, name = txt["y.lab", lang], 
       breaks = scales::pretty_breaks(n = 10)
-    ) + 
-    scale_color_manual(values = swi_rpal) +
+    ) +
+    scale_colour_identity() + 
     labs(
-      title = paste0(strwrap(txt['main.title', lang], width = 66, prefix = "\n", initial = ""), collapse = ""), 
+      title = paste0(strwrap(txt['main.title', lang], width = 66, 
+        prefix = "\n", initial = ""), collapse = ""),
       subtitle =  txt['descr', lang],
       caption = paste0(txt['source', lang], ": ", txt['source.name', lang], " | ", txt['footer.a', lang], " | swissinfo.ch", "\n", footer2)
-      )
+    )
   
+  
+  
+  # 
+  # p <- ggplot(
+  #   data = dddd, 
+  #   aes(x = he, y = le, frame = .frame)
+  # ) + 
+  #   geom_text(
+  #     data = time.lab, aes(x = x, y = y, label = year, frame  = .frame), 
+  #     size = 80, hjust = 1, vjust = 0, family = txt['title.font', lang], 
+  #     colour = "#e5dbcd", alpha = 0.4)   +
+  #   geom_text(
+  #     aes(x = he, y = le, label = label, frame  = .frame, colour = iso2c), 
+  #     hjust = 0, nudge_x = 30, nudge_y = 0.3, family = txt['base.font', lang], size = 5, alpha  = 0.9
+  #   ) +
+  #   geom_path(aes( group = iso2c, colour = iso2c, cumulative = TRUE), size = 0.3) + 
+  #   geom_point(aes( group = iso2c, colour = iso2c), size = 2.5) +
+  #   sTheme(base_size = 20, base_family = txt['base.font', lang], title_family =  txt['title.font', lang], 
+  #          subtitle = txt['base.font', lang]) +
+  #   theme(plot.margin = unit(c(0.3, 1.5, 0.2, 0.7), "lines")) +
+  #   scale_x_continuous(
+  #     breaks = scales::pretty_breaks(n = 10),
+  #     limits = xlim,
+  #     labels = scales::dollar,
+  #     expand = c(0, 0.1),
+  #     name = paste0(txt["x.lab", lang], "\n", txt["x.lab2", lang])) +
+  #   scale_y_continuous(
+  #     limits = ylim, name = txt["y.lab", lang], 
+  #     breaks = scales::pretty_breaks(n = 10)
+  #   ) + 
+  #   scale_color_manual(values = swi_rpal) +
+  #   labs(
+  #     title = paste0(strwrap(txt['main.title', lang], width = 66, prefix = "\n", initial = ""), collapse = ""), 
+  #     subtitle =  txt['descr', lang],
+  #     caption = paste0(txt['source', lang], ": ", txt['source.name', lang], " | ", txt['footer.a', lang], " | swissinfo.ch", "\n", footer2)
+  #     )
+  # 
   animation::ani.options(interval = ani.interval)
   gg_animate(p, outfile, title_frame = F, ani.width = 640 * 1.4, 
              ani.height = 640 * 1.4)

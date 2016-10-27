@@ -211,21 +211,16 @@ df.all &lt;- right_join(df1, df2)  </code></pre>
 # remove row with NA he or le
 #df &lt;- df[which(!(is.na(df$he) | is.na(df$le))),] %&gt;% arrange(year)
 df %&gt;% group_by(iso3c) %&gt;% summarise(nVal = length(he) )</code></pre>
-<pre><code>## # A tibble: 12 × 2
-##    iso3c  nVal
-##    &lt;chr&gt; &lt;int&gt;
-## 1    CAN    57
-## 2    CHE    57
-## 3    DEU    57
-## 4    ESP    57
-## 5    FRA    57
-## 6    GBR    57
-## 7    JPN    57
-## 8    KOR    57
-## 9    PRT    57
-## 10   SWE    57
-## 11   TUR    57
-## 12   USA    57</code></pre>
+<pre><code>## # A tibble: 7 × 2
+##   iso3c  nVal
+##   &lt;chr&gt; &lt;int&gt;
+## 1   CHE    57
+## 2   DEU    57
+## 3   ESP    57
+## 4   FRA    57
+## 5   GBR    57
+## 6   JPN    57
+## 7   USA    57</code></pre>
 <pre class="r"><code># test plot
 ylim &lt;-  c(70, 85)
 xlim &lt;- c(0, 9500)
@@ -1570,20 +1565,42 @@ if(testGif) {
 years &lt;- by(dd, dd$iso2c, function(ddd) ddd[which(!is.na(ddd$he) &amp; !is.na(ddd$le)),'year'] ) %&gt;% 
   unlist(use.names = F) %&gt;% unique() %&gt;% sort()
 dd %&lt;&gt;% filter(year %in% years)
+dd$col &lt;- swi_rpal[-c(3,5,7, 11)][dd$iso2c]
 
 # keep only one year data every 2 years
-years &lt;- sort(unique(dd$year))
-years.sub &lt;- seq(min(years), max(years), 2)
-dd &lt;- dd %&gt;% filter(year %in% years.sub)
+# years &lt;- sort(unique(dd$year))
+# years.sub &lt;- seq(min(years), max(years), 2)
+# dd &lt;- dd %&gt;% filter(year %in% years.sub)
 
+# create a data.frame with start, end values
+tRanges &lt;- dd %&gt;% group_by(iso2c, country) %&gt;% 
+  filter(!is.na(he) &amp; !is.na(le)) %&gt;% arrange(year) %&gt;%
+  summarise(tStart = first(year), tEnd = last(year)) %&gt;%
+  ungroup()
+  
+if(length(unique(tRanges$tStart)) &gt; 1 || length(unique(tRanges$tEnd)) &gt; 1) {
+  stop()
+}
+tRanges &lt;- range(tRanges$tStart, tRanges$tEnd)
+
+dd.seg &lt;- dd %&gt;% filter(year %in% tRanges) %&gt;% arrange(year) %&gt;%
+  group_by(iso2c, country, col) %&gt;% 
+  summarise(x = first(he), xend = last(he), y = first(le), yend = last(le)) %&gt;%
+  ungroup()
+
+dd.point &lt;- dd %&gt;% filter(year %in% tRanges)
+#dd.point[which(dd.point$year == min(tRanges)), 'col'] &lt;- &quot;white&quot; 
+#dd.point [which(dd.point$year == max(tRanges)), 'col'] &lt;- &quot;black&quot; 
 # create a list of data frame for each year
-ddd &lt;- split(dd, dd$year)
-ddd &lt;- c(ddd, rep(ddd[length(ddd)], 20))
 
-tf &lt;- tween_states(ddd, tweenlength = 1, statelength = 1, 
-                   ease = c('quadratic-in-out'), 
-                   nframes = 60) 
-time.lab &lt;- tf %&gt;% select(year, .frame) %&gt;% filter(year %in% years)
+ddd &lt;- split(dd.point, dd.point$year)
+ddd &lt;- c(ddd, rep(ddd[length(ddd)], 2), ddd[1])
+
+tf &lt;- tween_states(
+  ddd, tweenlength = 1, statelength = 1.2, 
+  ease = c('quadratic-in-out'), nframes = 50
+) 
+time.lab &lt;- tf %&gt;% select(year, .frame) %&gt;% filter(year %in% tRanges)
 time.lab &lt;- time.lab[!duplicated(time.lab),]
 time.lab$x &lt;- 9450
 time.lab$y &lt;- 70
@@ -1592,32 +1609,49 @@ tf &lt;- tf %&lt;&gt;% select(-year)
 for(lang in colnames(txt)) {
 
   dddd &lt;- tf
-  outfile &lt;-  paste0(&quot;01_animated_healthcareEvsLifeE_&quot;, lang, ifelse(testGif, &quot;_test&quot;, &quot;&quot;), &quot;.gif&quot;)
+  outfile &lt;-  paste0(&quot;01_connectedScatter_healthcareEvsLifeE_&quot;, lang, ifelse(testGif, &quot;_test&quot;, &quot;&quot;), &quot;.gif&quot;)
   
   dddd$label &lt;- countryTranslation(as.character(dddd$iso2c), lang)[,-1]
   if(any(is.na(dddd$label))) {
     stop(&quot;\nSome country translations are missing!&quot;)
   }
-  
+  dddd.label &lt;- dddd %&gt;% group_by(label, iso2c) %&gt;%
+    summarise(he = max(he), le = max(le)) %&gt;%
+    ungroup()
+  dddd.label &lt;- cbind(dddd.label, dd.seg[match(dddd.label$iso2c, dd.seg$iso2c), 'col'])
+    
   footer2 &lt;- paste0(&quot;\n&quot;, txt['footer.b', lang], &quot; &quot;, txt['footer.c', lang])
   footer2 &lt;-paste0(strwrap(footer2, width = 190, prefix = &quot;\n&quot;), collapse = &quot;&quot;)
    
   p &lt;- ggplot(
     data = dddd, 
-    aes(x = he, y = le, frame = .frame)
+    aes(x = he, y = le)
   ) + 
-    geom_text(
-      data = time.lab, aes(x = x, y = y, label = year, frame  = .frame), 
-      size = 80, hjust = 1, vjust = 0, family = txt['title.font', lang], 
-      colour = &quot;#e5dbcd&quot;, alpha = 0.4)   +
-    geom_text(
-      aes(x = he, y = le, label = label, frame  = .frame, colour = iso2c), 
-      hjust = 0, nudge_x = 30, nudge_y = 0.3, family = txt['base.font', lang], size = 5, alpha  = 0.9
+    geom_text( 
+      data = dddd.label,
+      aes(label = label, colour = col), hjust = 0, 
+      nudge_x = 50, nudge_xnudge_y = 1.2, alpha = 0.9,
+      family = txt['title.font', lang], size = 4
+    ) + 
+    geom_segment(
+      data = dd.seg, 
+      aes(x = x, xend = xend, y = y, yend = yend, 
+          group = iso2c, colour = col), size = 0.3, alpha = 0.8
     ) +
-    geom_path(aes( group = iso2c, colour = iso2c, cumulative = TRUE), size = 0.3) + 
-    geom_point(aes( group = iso2c, colour = iso2c), size = 2.5) +
-    sTheme(base_size = 20, base_family = txt['base.font', lang], title_family =  txt['title.font', lang], 
-           subtitle = txt['base.font', lang]) +
+    geom_line(data = dd,
+      aes(x = he, y = le, group = iso2c, colour = col), 
+      size = 0.3, linetype = &quot;dashed&quot;, alpha = 0.9
+    ) + 
+    geom_point(aes(colour = col, group = iso2c, frame = .frame), size = 3.8, shape = 18, alpha = 0.9) +
+    geom_text(
+      data = time.lab, aes(x = x, y = y, label = year, frame  = .frame),
+      size = 80, hjust = 1, vjust = 0, family = txt['title.font', lang],
+      colour = &quot;#e5dbcd&quot;, alpha = 0.3)   +
+    sTheme(
+      base_size = 20, base_family = txt['base.font', lang], 
+      title_family =  txt['title.font', lang], 
+      subtitle = txt['base.font', lang]
+    ) +
     theme(plot.margin = unit(c(0.3, 1.5, 0.2, 0.7), &quot;lines&quot;)) +
     scale_x_continuous(
       breaks = scales::pretty_breaks(n = 10),
@@ -1628,226 +1662,161 @@ for(lang in colnames(txt)) {
     scale_y_continuous(
       limits = ylim, name = txt[&quot;y.lab&quot;, lang], 
       breaks = scales::pretty_breaks(n = 10)
-    ) + 
-    scale_color_manual(values = swi_rpal) +
+    ) +
+    scale_colour_identity() + 
     labs(
-      title = paste0(strwrap(txt['main.title', lang], width = 66, prefix = &quot;\n&quot;, initial = &quot;&quot;), collapse = &quot;&quot;), 
+      title = paste0(strwrap(txt['main.title', lang], width = 66, 
+        prefix = &quot;\n&quot;, initial = &quot;&quot;), collapse = &quot;&quot;),
       subtitle =  txt['descr', lang],
       caption = paste0(txt['source', lang], &quot;: &quot;, txt['source.name', lang], &quot; | &quot;, txt['footer.a', lang], &quot; | swissinfo.ch&quot;, &quot;\n&quot;, footer2)
-      )
+    )
   
+  
+  
+  # 
+  # p &lt;- ggplot(
+  #   data = dddd, 
+  #   aes(x = he, y = le, frame = .frame)
+  # ) + 
+  #   geom_text(
+  #     data = time.lab, aes(x = x, y = y, label = year, frame  = .frame), 
+  #     size = 80, hjust = 1, vjust = 0, family = txt['title.font', lang], 
+  #     colour = &quot;#e5dbcd&quot;, alpha = 0.4)   +
+  #   geom_text(
+  #     aes(x = he, y = le, label = label, frame  = .frame, colour = iso2c), 
+  #     hjust = 0, nudge_x = 30, nudge_y = 0.3, family = txt['base.font', lang], size = 5, alpha  = 0.9
+  #   ) +
+  #   geom_path(aes( group = iso2c, colour = iso2c, cumulative = TRUE), size = 0.3) + 
+  #   geom_point(aes( group = iso2c, colour = iso2c), size = 2.5) +
+  #   sTheme(base_size = 20, base_family = txt['base.font', lang], title_family =  txt['title.font', lang], 
+  #          subtitle = txt['base.font', lang]) +
+  #   theme(plot.margin = unit(c(0.3, 1.5, 0.2, 0.7), &quot;lines&quot;)) +
+  #   scale_x_continuous(
+  #     breaks = scales::pretty_breaks(n = 10),
+  #     limits = xlim,
+  #     labels = scales::dollar,
+  #     expand = c(0, 0.1),
+  #     name = paste0(txt[&quot;x.lab&quot;, lang], &quot;\n&quot;, txt[&quot;x.lab2&quot;, lang])) +
+  #   scale_y_continuous(
+  #     limits = ylim, name = txt[&quot;y.lab&quot;, lang], 
+  #     breaks = scales::pretty_breaks(n = 10)
+  #   ) + 
+  #   scale_color_manual(values = swi_rpal) +
+  #   labs(
+  #     title = paste0(strwrap(txt['main.title', lang], width = 66, prefix = &quot;\n&quot;, initial = &quot;&quot;), collapse = &quot;&quot;), 
+  #     subtitle =  txt['descr', lang],
+  #     caption = paste0(txt['source', lang], &quot;: &quot;, txt['source.name', lang], &quot; | &quot;, txt['footer.a', lang], &quot; | swissinfo.ch&quot;, &quot;\n&quot;, footer2)
+  #     )
+  # 
   animation::ani.options(interval = ani.interval)
   gg_animate(p, outfile, title_frame = F, ani.width = 640 * 1.4, 
              ani.height = 640 * 1.4)
 
 
 }</code></pre>
+<pre><code>## Warning: Ignoring unknown parameters: nudge_xnudge_y</code></pre>
 <pre><code>## Warning: Ignoring unknown aesthetics: frame
 
 ## Warning: Ignoring unknown aesthetics: frame</code></pre>
-<pre><code>## Warning: Ignoring unknown aesthetics: cumulative</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_text).</code></pre>
-<pre><code>## geom_path: Each group consists of only one observation. Do you need to
-## adjust the group aesthetic?</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 4 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 4 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 4 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 2 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 4 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 4 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 4 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 4 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 4 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 4 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 4 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 5 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 4 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 4 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 6 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 4 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 4 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 7 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 4 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 16 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 17 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 2 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 8 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 2 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 9 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 10 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 11 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 12 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 13 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 14 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 15 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 3 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 2 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 34 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 2 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 2 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 35 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 2 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 26 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 26 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 26 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 26 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 26 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 26 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 26 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 26 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 26 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 26 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 26 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_text).</code></pre>
-<pre><code>## Warning: Removed 26 rows containing missing values (geom_path).</code></pre>
-<pre><code>## Warning: Removed 1 rows containing missing values (geom_point).</code></pre>
-<pre><code>## Warning: Removed 58 rows containing missing values (geom_path).
+<pre><code>## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
+## Warning: Removed 17 rows containing missing values (geom_path).
 
-## Warning: Removed 58 rows containing missing values (geom_path).
-
-## Warning: Removed 58 rows containing missing values (geom_path).
-
-## Warning: Removed 58 rows containing missing values (geom_path).
-
-## Warning: Removed 58 rows containing missing values (geom_path).</code></pre>
+## Warning: Removed 17 rows containing missing values (geom_path).</code></pre>
 <pre><code>## Executing: 
 ## 'convert' -loop 0 -delay 20 Rplot1.png Rplot2.png Rplot3.png
 ##     Rplot4.png Rplot5.png Rplot6.png Rplot7.png Rplot8.png
@@ -1859,16 +1828,9 @@ for(lang in colnames(txt)) {
 ##     Rplot34.png Rplot35.png Rplot36.png Rplot37.png Rplot38.png
 ##     Rplot39.png Rplot40.png Rplot41.png Rplot42.png Rplot43.png
 ##     Rplot44.png Rplot45.png Rplot46.png Rplot47.png Rplot48.png
-##     Rplot49.png Rplot50.png Rplot51.png Rplot52.png Rplot53.png
-##     Rplot54.png Rplot55.png Rplot56.png Rplot57.png Rplot58.png
-##     Rplot59.png Rplot60.png Rplot61.png Rplot62.png Rplot63.png
-##     Rplot64.png Rplot65.png Rplot66.png Rplot67.png Rplot68.png
-##     Rplot69.png Rplot70.png Rplot71.png Rplot72.png Rplot73.png
-##     Rplot74.png Rplot75.png Rplot76.png Rplot77.png Rplot78.png
-##     Rplot79.png Rplot80.png Rplot81.png Rplot82.png Rplot83.png
-##     Rplot84.png Rplot85.png
-##     '01_animated_healthcareEvsLifeE_EN.gif'</code></pre>
-<pre><code>## Output at: 01_animated_healthcareEvsLifeE_EN.gif</code></pre>
+##     Rplot49.png Rplot50.png
+##     '01_connectedScatter_healthcareEvsLifeE_EN.gif'</code></pre>
+<pre><code>## Output at: 01_connectedScatter_healthcareEvsLifeE_EN.gif</code></pre>
 <p>```</p>
 </div>
 
