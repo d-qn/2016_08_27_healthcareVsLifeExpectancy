@@ -1,0 +1,18 @@
+code,EN,FR,DE,IT,PT,AR,RU,ES,JA,ZH
+main.title,,"Les coûts pour la santé diffèrent largement en Suisse selon les cantons, ceci évidemment sans aucun lien avec l'espérance de vie",,,,,,,,
+descr,,"Liens entre dépenses publiques pour la santé, primes d'assurance maladie de base et espérance de vie. Par canton suisse et en 2014. La taille des bulles est proportionnelle à la population des cantons. ",,,,,,,,
+h3a,,"Les budgets cantonaux pour la santé sont parfaitement corrélés avec les primes d'assurance maladie de base, bien heureusement",,,,,,,,
+h3b,,"Mais sans surpise, l'espérance de vie cantonale n'a aucun lien avec le montant des primes d'assurance maladie ",,,,,,,,
+chb.var,,Budget cantonal pour la santé par habitant,,,,,,,,
+chb.millierCHF.tp,,milliers CHF,,,,,,,,
+prem.var,,Primes assurance maladie moyennes,,,,,,,,
+prem.CHF.tp,,CHF,,,,,,,,
+chb.tot.tp,,Budget cantonal pour la santé,,,,,,,,
+chb.tot.million,,millions CHF,,,,,,,,
+pop.tp,,Population,,,,,,,,
+le.var,,Espérance de vie,,,,,,,,
+le.unit,,ans,,,,,,,,
+source,Source,source,Quelle,Fonte,fonte,المصدر,Источник,Fuente,出典,来源
+source.name,,"Administration fédérale des finances, Département fédéral de l'intérieur DFI, Office fédéral de la statistique",,,,,,,,
+title.font,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,PingFang SC Semibold,PingFang SC Semibold
+base.font,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,Hiragino Sans W1,PingFang SC Light

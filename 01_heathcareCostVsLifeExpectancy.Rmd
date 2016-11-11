@@ -259,8 +259,8 @@ for(lang in colnames(txt)) {
     geom_text( 
       data = dddd.label,
       aes(label = label, colour = col), hjust = 0, 
-      nudge_x = 50, nudge_xnudge_y = 1.2, alpha = 0.9,
-      family = txt['title.font', lang], size = 4
+      nudge_x = 52, nudge_xnudge_y = 1.2, alpha = 1,
+      family = txt['base.font', lang], size = 5.2
     ) + 
     geom_segment(
       data = dd.seg, 
@@ -271,7 +271,7 @@ for(lang in colnames(txt)) {
       aes(x = he, y = le, group = iso2c, colour = col), 
       size = 0.3, linetype = "dashed", alpha = 0.9
     ) + 
-    geom_point(aes(colour = col, group = iso2c, frame = .frame), size = 3.8, shape = 18, alpha = 0.9) +
+    geom_point(aes(colour = col, group = iso2c, frame = .frame), size = 4, shape = 18, alpha = 0.8) +
     geom_text(
       data = time.lab, aes(x = x, y = y, label = year, frame  = .frame),
       size = 80, hjust = 1, vjust = 0, family = txt['title.font', lang],

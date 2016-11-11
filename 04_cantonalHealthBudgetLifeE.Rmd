@@ -1,5 +1,5 @@
 ---
-title: ""
+title: "Cantonal health budget, health premiums and life expectancy"
 author: "Duc-Quang Nguyen | swissinfo.ch"
 date: " 2016"
 output: 
@@ -15,18 +15,19 @@ output:
 * Population from [stat-tab](https://www.pxweb.bfs.admin.ch/Table.aspx?layout=tableViewLayout2&px_tableid=px-x-0102010000_102%5cpx-x-0102010000_102.px&px_language=fr&px_type=PX&px_db=px-x-0102010000_102&rxid=c52f847b-3e18-4f95-be22-520dd3a44e44)
 * Primes moyenne par canton [OFSP](http://www.bag.admin.ch/themen/krankenversicherung/00261/15006/index.html?lang=fr), pdf [Assurance-maladie - Primes 2014](http://www.bag.admin.ch/themen/krankenversicherung/00261/15006/index.html?lang=fr&download=NHzLpZeg7t,lnp6I0NTU042l2Z6ln1ae2IZn4Z2qZpnO2Yuq2Z6gpJCLeX54f2ym162epYbg2c_JjKbNoKSn6A--)
   * tabulized!
+* [Espérance de vie par canton](https://www.bfs.admin.ch/bfs/fr/home/statistiques/population/naissances-deces/deces-mortalite-esperance-vie.assetdetail.317642.html)
 
 ```{r setup, include=FALSE}
 
 mergedCantonalBudget <- T
+translation.file <- "input/Scatters cantonal health budget, premiums, life expectancy - Sheet1.csv"
 
 health.code <- as.character(c(41, 42, 43, 48, 49, 51))
 path.cantonalMuni.buget <- "data/fs_ktn_gdn/ktn_gdn_vgl.xlsx"
 
 path.cantonalPop <- "data/px-x-0102010000_102.csv"
 path.prime2014 <- "data/Prime_moyenneCanton_2014_tabula-f-3.csv"
-#path.lifeExpectancy <- 
-
+path.lifeExpectancy <- "data/su-f-01.04.02.03.04.xls"
 
 library(readr)
 library(tidyr)
@@ -37,19 +38,21 @@ library(scales)
 library(swiMap)
 library(swiTheme)
 library(forcats)
-
 ### Getting data in packages
 library(readxl)
 
-
 ### Interactive 
+library(parcoords)
 library(htmltools)
 library(shiny)
 library(swiRcharts)
 library(rCharts)
 ```
 
-```{r get cantonal health data}
+## Get & shape data
+
+### Cantonal budget on health
+```{r get cantonal health data, echo = F}
 b.read <- read_excel(path.cantonalMuni.buget, sheet = "ausgaben_funk", skip = 6)
 # rename colnames
 colnames(b.read)[1] <- 'id'
@@ -65,7 +68,8 @@ hs$Canton <- rownames(hs)
 hs %<>% rename(health = `colSums(hs, na.rm = T)`)
 ```
 
-```{r cantonal pop load and average premiums}
+### Cantonal population and average health premium
+```{r cantonal pop load and average premiums, echo = F}
 pop <- read.table(path.cantonalPop, skip = 1, sep = "\t", header = T, check.names = F, encoding = "latin1")
 pop %<>% select(-Année, -`Type de population`, -`Sexe`, -`Etat civil`)
 
@@ -76,12 +80,157 @@ prem <- read.csv(path.prime2014, header = F, stringsAsFactors = F)[,c(1, 3)]
 colnames(prem) <- c('Canton', 'prime')
 ```
 
+### Cantonal life expectancy
+```{r cantonal life expectancy}
+cle <- read_excel(path.lifeExpectancy, skip = 4)
+# remove NA rows
+cle <- cle[apply(cle, 1, function(row) !all(is.na(row[-1]))),]
+# remove Suiise average
+cle <- cle[-1,]
+cle$Canton <- canton_namesStrict(unlist(cle[,1], use.names = F), output = "iso2")
+cle[is.na(cle$Canton),'Canton'] <- c('SZ', 'AR', 'AI')
+
+colnames(cle)[2] <- 'espéranceDeVie_Hommes'
+colnames(cle)[3] <- 'espéranceDeVie_Femmes'
+colnames(cle)[4] <- 'espéranceDeVie65_Hommes'
+colnames(cle)[5] <- 'espéranceDeVie65_Femmes'
+
+
+# compute the average life expectancy by canton men + women
+cle %<>% group_by(Canton) %>%
+  summarise(
+    lifeE = mean(espéranceDeVie_Hommes, espéranceDeVie_Femmes),
+    lifeE65 = mean(espéranceDeVie65_Hommes, espéranceDeVie65_Femmes)
+  ) %>% ungroup()
+
+```
+
 ```{r combine all data}
 data <- left_join(pop, hs)
 data$healthSpendingByCapita <- data$health / data$pop
 data <- left_join(data, prem)
+data <- left_join(data, cle)
 
+# test viz
 ggplot(data = data) + geom_point(aes(x = healthSpendingByCapita, y = prime, group=Canton, size = pop))
+ggplot(data = data) + geom_point(aes(x = prime, y = lifeE, group=Canton, size = pop))
+```
 
 
+```{r interactive scatters}
+library(ggiraph)
+txt <- loadTranslation(translation.file)
+
+lang <- 'FR'
+
+dd <- data
+dd$label <- canton_CH[match(dd$Canton, canton_CH$iso2), 'intl']
+  
+for (lang in colnames(txt)) {
+  tooltip_css <- "background-color:#f2f2f2;padding:0px;margin:0px;border-radius:5px;"
+  hover_css <- "fill:#ab3d3f;"
+
+  dd$tip1 <-  paste0(
+    '<h4>', as.character(dd$label), '</h4><div class = "tp">', 
+    txt['chb.var', lang], ': <b>', round(dd$healthSpendingByCapita, 1), ' </b>', txt['chb.millierCHF.tp', lang], '<br>',
+    txt['prem.var', lang], ': <b>', round(dd$prime), '</b>', txt['prem.CHF.tp', lang], '<br><br>',
+    txt['chb.tot.tp', lang], ": ", round(dd$health / 1000), " ", txt['chb.tot.million', lang], "<br>",
+    txt['pop.tp', lang],": ", dd$pop,"<br>",
+    '</div>')
+  dd$tip1 <- gsub("'", "_", gsub("\\\n", "", dd$tip1))
+  
+  dd$tip2 <- paste0(
+    '<h4>', as.character(dd$label), '</h4><div class = "tp">', 
+    txt['prem.var', lang], ': <b>', round(dd$prime), '</b> ', txt['prem.CHF.tp', lang], '<br>',
+    txt['le.var', lang], ": <b>",  round(dd$lifeE, 1 ), " </b>", txt['le.unit', lang], "<br>",
+    '</div>')
+  dd$tip2 <- gsub("'", "_", gsub("\\\n", "", dd$tip2))
+  
+  
+  iscatter <- function(dd, x, y, z, group, tooltip, xaxis.lab, yaxis.lab = "", colour = "#336666") {
+    gg <- ggplot(data = dd, aes_string(x = x, y = y, group = group)) + 
+      geom_point_interactive(
+        aes_string(size = z, data_id = group, tooltip = tooltip), 
+        colour = colour, alpha = 0.65) +
+      geom_text(aes_string(label = group), 
+                family = txt["base.font", lang], colour = "white", size = 2.9) + 
+      scale_size_continuous(range = c(5, 25), guide = F) + 
+      scale_x_continuous(
+        name = xaxis.lab, 
+        breaks = pretty_breaks(n = 5), expand = c(0, 0.15)) + 
+      scale_y_continuous(
+        name = yaxis.lab,
+        expand = c(0.001, 10)
+      ) + 
+      theme(legend.position = "none") + 
+      swi_theme(base_family = txt["base.font", lang], title_family = txt["title.font", lang]) + 
+      theme(
+        panel.grid.major.y=element_line(color="#b3b3b3", linetype="dotted", size=0.01),
+        axis.line.x=element_line(size=0.5),
+        plot.margin = unit(c(0, 0, 0.3, 0.1), "cm")
+      )
+  }
+  
+  interactivate <- function(gg) {
+    ggiraph(
+      code = {print(gg)}, 
+      width_svg = 8,
+      width = 1, 
+      tooltip_offx  = -70,
+      hover_css = hover_css,
+      tooltip_extra_css = tooltip_css,
+      fontname_sans = 'Open Sans Condensed'
+    )  
+  }
+  
+  gg1 <- iscatter(
+    dd %>% filter(!Canton %in% c("AR")), x = 'healthSpendingByCapita', y = 'prime', 
+    z = 'pop', group = 'Canton', tooltip = "tip1",
+    xaxis.lab = paste0(txt['chb.var', lang], " (", txt['chb.millierCHF.tp', lang], ")"),
+    yaxis.lab = paste0(txt['prem.var', lang], " (", txt['prem.CHF.tp', lang], ")")
+  )
+  gg1 <- gg1 + geom_smooth(
+    aes(x = healthSpendingByCapita, y = prime, group = 1), 
+    method = "lm", se = F, alpha = 0.6, colour = "#ab3d3f", size = 0.5, linetype = "dotted"
+  )
+  
+  gg2 <- iscatter(
+    dd, x = 'lifeE', y = 'prime', 
+    z = 'pop', group = 'Canton', tooltip = "tip2",
+    xaxis.lab = paste0(txt["le.var", lang], " (", txt["le.unit", lang], ")"),
+    yaxis.lab = paste0(txt['prem.var', lang], " (", txt['prem.CHF.tp', lang], ")"),
+    colour = "#333366"
+  )
+  igg1 <- interactivate(gg1)
+  #igg1
+  igg2 <- interactivate(gg2)
+  #igg2
+  
+  source <- paste0(txt['source', lang], ": ", txt['source.name', lang], " | swissinfo.ch")
+  save_html(
+    tags$html(
+      tags$head(includeHTML("styles.html")),
+      tags$body(    
+        h2(txt["main.title", lang]),
+        div(class = "descr", HTML(paste0(txt["descr", lang]))),
+        h3(txt["h3a", lang]),
+        div(class="container", igg1),
+        HTML(iframeresizer)  
+      )), file = paste0("scatter_cantonalHealth_1_", lang, ".html"), libdir = "js"
+  )
+  save_html(
+    tags$html(
+      tags$head(includeHTML("styles.html")),
+      tags$body(    
+        h3(txt["h3b", lang]),
+        div(class="container", igg2),
+        div(id = "cite", HTML(source)),
+        HTML(iframeresizer)  
+      )), file =  paste0("scatter_cantonalHealth_2_", lang, ".html"), libdir = "js"
+  )  
+}
+
+
+   
+   
 ```
