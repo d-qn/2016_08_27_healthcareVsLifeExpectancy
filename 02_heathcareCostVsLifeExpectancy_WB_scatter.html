@@ -95,6 +95,7 @@ button.code-folding-btn:focus {
 </style>
 
 
+
 <div class="container-fluid main-container">
 
 <!-- tabsets -->
@@ -319,7 +320,7 @@ bc %&lt;&gt;% hc_yAxis(
   ) %&gt;%
   hc_plotOptions(
     bubble = list(
-      maxSize = &quot;5.5%&quot;,
+      maxSize = &quot;7%&quot;,
       minSize = &quot;0.3%&quot;,
       marker = list(lineWidth = 0, fillOpacity = 0.5),
       dataLabels = list(
@@ -328,7 +329,7 @@ bc %&lt;&gt;% hc_yAxis(
         format = '{point.name}', 
         style = list(
           textShadow = F,
-          fontSize = &quot;0.82em&quot;,
+          fontSize = &quot;0.9em&quot;,
           verticalAlign = &quot;middle&quot;,
           fontWeight = &quot;normal&quot;
         )
@@ -368,6 +369,7 @@ save_html(
 $(document).ready(function () {
   $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
 });
+
 
 </script>
 

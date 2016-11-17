@@ -197,9 +197,9 @@ $(document).ready(function () {
 ##   income = col_character(),
 ##   indicator = col_character()
 ## )</code></pre>
-<pre><code>## Warning in loadTranslation(translation.file): FR DE  IT  PT  AR  RU  ES  JA  ZH languages will be discarded!</code></pre>
+<pre><code>## Warning in loadTranslation(translation.file): EN DE  IT  PT  AR  RU  ES  JA  ZH languages will be discarded!</code></pre>
 <pre><code>## 
-##  Remaining column names:  EN</code></pre>
+##  Remaining column names:  FR</code></pre>
 <pre class="r"><code>df1 &lt;- he.data %&gt;% 
   rename(he = obsValue, iso3c = LOCATION, year = obsTime) %&gt;% 
   select(-REFERENCEPERIOD)
@@ -1622,7 +1622,7 @@ for(lang in colnames(txt)) {
   dddd.label &lt;- cbind(dddd.label, dd.seg[match(dddd.label$iso2c, dd.seg$iso2c), 'col'])
     
   footer2 &lt;- paste0(&quot;\n&quot;, txt['footer.b', lang], &quot; &quot;, txt['footer.c', lang])
-  footer2 &lt;-paste0(strwrap(footer2, width = 180, prefix = &quot;\n&quot;), collapse = &quot;&quot;)
+  footer2 &lt;-paste0(strwrap(footer2, width = 176, prefix = &quot;\n&quot;), collapse = &quot;&quot;)
    
   p &lt;- ggplot(
     data = dddd, 
@@ -1647,7 +1647,7 @@ for(lang in colnames(txt)) {
     geom_text(
       data = time.lab, aes(x = x, y = y, label = year, frame  = .frame),
       size = 80, hjust = 1, vjust = 0, family = txt['title.font', lang],
-      colour = &quot;#e5dbcd&quot;, alpha = 0.3)   +
+      colour = &quot;#e5dbcd&quot;, alpha = 0.5)   +
     sTheme(
       base_size = 25, base_family = txt['base.font', lang], 
       title_family =  txt['title.font', lang], 
@@ -1674,8 +1674,6 @@ for(lang in colnames(txt)) {
       subtitle =  txt['descr', lang],
       caption = paste0(txt['source', lang], &quot;: &quot;, txt['source.name', lang], &quot; | &quot;, txt['footer.a', lang], &quot; | swissinfo.ch&quot;, &quot;\n&quot;, footer2)
     )
-  
-  
   
   # 
   # p &lt;- ggplot(
@@ -1712,11 +1710,13 @@ for(lang in colnames(txt)) {
   #     caption = paste0(txt['source', lang], &quot;: &quot;, txt['source.name', lang], &quot; | &quot;, txt['footer.a', lang], &quot; | swissinfo.ch&quot;, &quot;\n&quot;, footer2)
   #     )
   # 
+  
   animation::ani.options(interval = ani.interval)
   gg_animate(p, outfile, title_frame = F, ani.width = 640 * 1.4, 
-             ani.height = 640 * 1.4)
+             ani.height = 600 * 1.4)
 
-
+  # move to output
+  file.rename(from = outfile, to = paste0(&quot;output/&quot;, outfile))
 }</code></pre>
 <pre><code>## Warning: Ignoring unknown parameters: nudge_xnudge_y</code></pre>
 <pre><code>## Warning: Ignoring unknown aesthetics: frame
@@ -1833,8 +1833,8 @@ for(lang in colnames(txt)) {
 ##     Rplot39.png Rplot40.png Rplot41.png Rplot42.png Rplot43.png
 ##     Rplot44.png Rplot45.png Rplot46.png Rplot47.png Rplot48.png
 ##     Rplot49.png Rplot50.png
-##     '01_connectedScatter_healthcareEvsLifeE_EN.gif'</code></pre>
-<pre><code>## Output at: 01_connectedScatter_healthcareEvsLifeE_EN.gif</code></pre>
+##     '01_connectedScatter_healthcareEvsLifeE_FR.gif'</code></pre>
+<pre><code>## Output at: 01_connectedScatter_healthcareEvsLifeE_FR.gif</code></pre>
 <p>```</p>
 </div>
 

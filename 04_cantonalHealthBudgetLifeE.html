@@ -217,12 +217,12 @@ dd$label &lt;- canton_CH[match(dd$Canton, canton_CH$iso2), 'intl']
   
 for (lang in colnames(txt)) {
   tooltip_css &lt;- &quot;background-color:#f2f2f2;padding:0px;margin:0px;border-radius:5px;&quot;
-  hover_css &lt;- &quot;fill:#ab3d3f;&quot;
+  hover_css &lt;- &quot;fill:#790E11;stroke:#790E11;cursor:pointer;stroke-width:3px&quot;
 
   dd$tip1 &lt;-  paste0(
     '&lt;h4&gt;', as.character(dd$label), '&lt;/h4&gt;&lt;div class = &quot;tp&quot;&gt;', 
     txt['chb.var', lang], ': &lt;b&gt;', round(dd$healthSpendingByCapita, 1), ' &lt;/b&gt;', txt['chb.millierCHF.tp', lang], '&lt;br&gt;',
-    txt['prem.var', lang], ': &lt;b&gt;', round(dd$prime), '&lt;/b&gt;', txt['prem.CHF.tp', lang], '&lt;br&gt;&lt;br&gt;',
+    txt['prem.var', lang], ': &lt;b&gt;', round(dd$prime), '&lt;/b&gt; ', txt['prem.CHF.tp', lang], '&lt;br&gt;&lt;br&gt;',
     txt['chb.tot.tp', lang], &quot;: &quot;, round(dd$health / 1000), &quot; &quot;, txt['chb.tot.million', lang], &quot;&lt;br&gt;&quot;,
     txt['pop.tp', lang],&quot;: &quot;, dd$pop,&quot;&lt;br&gt;&quot;,
     '&lt;/div&gt;')
@@ -242,8 +242,8 @@ for (lang in colnames(txt)) {
         aes_string(size = z, data_id = group, tooltip = tooltip), 
         colour = colour, alpha = 0.65) +
       geom_text(aes_string(label = group), 
-                family = txt[&quot;base.font&quot;, lang], colour = &quot;white&quot;, size = 2.9) + 
-      scale_size_continuous(range = c(5, 25), guide = F) + 
+                family = txt[&quot;base.font&quot;, lang], colour = &quot;white&quot;, size = 3.8) + 
+      scale_size_continuous(range = c(7, 27), guide = F) + 
       scale_x_continuous(
         name = xaxis.lab, 
         breaks = pretty_breaks(n = 5), expand = c(0, 0.15)) + 
@@ -254,18 +254,23 @@ for (lang in colnames(txt)) {
       theme(legend.position = &quot;none&quot;) + 
       swi_theme(base_family = txt[&quot;base.font&quot;, lang], title_family = txt[&quot;title.font&quot;, lang]) + 
       theme(
-        panel.grid.major.y=element_line(color=&quot;#b3b3b3&quot;, linetype=&quot;dotted&quot;, size=0.01),
+        panel.grid.major.y=element_line(color=&quot;#b3b3b3&quot;, linetype=&quot;dotted&quot;, size=0.02),
         axis.line.x=element_line(size=0.5),
-        plot.margin = unit(c(0, 0, 0.3, 0.1), &quot;cm&quot;)
+        plot.margin = unit(c(0.1, 0, 0.3, 0.1), &quot;cm&quot;),
+        axis.text = element_text(colour = &quot;#8a8d8f&quot;),
+        axis.title = element_text(colour = '#646768'),
+        axis.line = element_line(colour = &quot;#8a8d8f&quot;)#,
+       # plot.background=element_rect(fill= &quot;#f3f3f2&quot;, colour = &quot;#f3f3f2&quot;)
       )
   }
   
   interactivate &lt;- function(gg) {
     ggiraph(
       code = {print(gg)}, 
-      width_svg = 8,
+      width_svg = 9,
       width = 1, 
-      tooltip_offx  = -70,
+      tooltip_offx  = -120,
+      tooltip_offy  = 25,
       hover_css = hover_css,
       tooltip_extra_css = tooltip_css,
       fontname_sans = 'Open Sans Condensed'
@@ -296,27 +301,44 @@ for (lang in colnames(txt)) {
   #igg2
   
   source &lt;- paste0(txt['source', lang], &quot;: &quot;, txt['source.name', lang], &quot; | swissinfo.ch&quot;)
+  # save_html(
+  #   tags$html(
+  #     tags$head(includeHTML(&quot;styles.html&quot;)),
+  #     tags$body(    
+  #       h2(txt[&quot;main.title&quot;, lang]),
+  #       div(class = &quot;descr&quot;, HTML(paste0(txt[&quot;descr&quot;, lang]))),
+  #       h3(txt[&quot;h3a&quot;, lang]),
+  #       div(class=&quot;container&quot;, igg1),
+  #       HTML(iframeresizer)  
+  #     )), file = paste0(&quot;scatter_cantonalHealth_1_&quot;, lang, &quot;.html&quot;), libdir = &quot;js&quot;
+  # )
+  # save_html(
+  #   tags$html(
+  #     tags$head(includeHTML(&quot;styles.html&quot;)),
+  #     tags$body(    
+  #       h3(txt[&quot;h3b&quot;, lang]),
+  #       div(class=&quot;container&quot;, igg2),
+  #       div(id = &quot;cite&quot;, HTML(source)),
+  #       HTML(iframeresizer)  
+  #     )), file =  paste0(&quot;scatter_cantonalHealth_2_&quot;, lang, &quot;.html&quot;), libdir = &quot;js&quot;
+  # )  
+  # 
   save_html(
     tags$html(
       tags$head(includeHTML(&quot;styles.html&quot;)),
       tags$body(    
         h2(txt[&quot;main.title&quot;, lang]),
-        div(class = &quot;descr&quot;, HTML(paste0(txt[&quot;descr&quot;, lang]))),
+        div(class = &quot;descr&quot;, HTML(paste0(txt[&quot;descr&quot;, lang], &quot;&lt;br&gt;&lt;br&gt;&quot;))),
         h3(txt[&quot;h3a&quot;, lang]),
         div(class=&quot;container&quot;, igg1),
-        HTML(iframeresizer)  
-      )), file = paste0(&quot;scatter_cantonalHealth_1_&quot;, lang, &quot;.html&quot;), libdir = &quot;js&quot;
-  )
-  save_html(
-    tags$html(
-      tags$head(includeHTML(&quot;styles.html&quot;)),
-      tags$body(    
         h3(txt[&quot;h3b&quot;, lang]),
         div(class=&quot;container&quot;, igg2),
         div(id = &quot;cite&quot;, HTML(source)),
         HTML(iframeresizer)  
-      )), file =  paste0(&quot;scatter_cantonalHealth_2_&quot;, lang, &quot;.html&quot;), libdir = &quot;js&quot;
-  )  
+      )), file = paste0(&quot;scatter_cantonalHealth_&quot;, lang, &quot;.html&quot;), libdir = &quot;js&quot;#, background = &quot;#f3f3f2&quot;
+  )
+   
+   
 }</code></pre>
 <pre><code>## Warning: Ignoring unknown aesthetics: data_id, tooltip</code></pre>
 <pre><code>## Warning: Ignoring unknown aesthetics: data_id, tooltip</code></pre>

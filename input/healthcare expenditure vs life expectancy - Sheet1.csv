@@ -1,26 +1,28 @@
 code,EN,FR,DE,IT,PT,AR,RU,ES,JA,ZH
-main.title,"Life expectancy increases with health expenditure, usually...",,,,,,,,,
-descr,Life Expectancy vs Health expenditure over time (1970-2014),,,,,,,,,
-x.lab,Health expenditure by capita*,,,,,,,,,
-x.lab2,"(adjusted for inflation, at PPP in 2010 USD)",,,,,,,,,
-y.lab,Life Expectancy (years),,,,,,,,,
-footer.a,remix of Our World in Data (https://ourworldindata.org/the-link-between-life-expectancy-and-health-spending-us-focus),,,,,,,,,
-footer.b,* at purchasing power parity (constant 2010 international USD).,,,,,,,,,
+main.title,Life expectancy increases with health expenditure,L'espérance de vie augmente avec les dépenses pour la santé,,,,,,,,
+descr,Life expectancy vs health expenditure over time (1970-2014),Espérance de vie vs dépenses pour la santé au cours du temps (1970-2014),,,,,,,,
+x.lab,Health expenditure by capita*,Dépenses en santé par habitant*,,,,,,,,
+x.lab2,"(adjusted for inflation, at PPP in 2010 USD)","(ajustée pour l'inflation, en USD 2010 à PPA)  ",,,,,,,,
+y.lab,Life Expectancy (years),Espérance de vie (ans),,,,,,,,
+footer.a,remix of 'Our World in Data' (https://ourworldindata.org/the-link-between-life-expectancy-and-health-spending-us-focus),remix de 'Our World in Data' (https://ourworldindata.org/the-link-between-life-expectancy-and-health-spending-us-focus),,,,,,,,
+footer.b,* at purchasing power parity (constant 2010 international USD).,* à parité des pouvoirs d'achat (dollars internationaux constants de 2010).,,,,,,,,
 footer.c,"Total health expenditure is the sum of public and private health expenditures as a ratio of total population. It covers the provision of health services (preventive and curative), family planning activities, nutrition activities, and emergency aid designated for health","Le total des dépenses de santé est la somme des dépenses de santé publiques et privées en tant que ratio de l'ensemble de la population. Il englobe la prestation de services de santé (préventifs et curatifs), les activités de planification familiale, les activités ayant trait à la nutrition et l'aide d'urgence réservée à la santé.",,,,,,,,
 source,Source,source,Quelle,Fonte,fonte,المصدر,Источник,Fuente,出典,来源
-source.name,OECD & World Bank,,,,,,,,,
+source.name,OECD & World Bank,OCDE & Banque Mondiale,,,,,,,,
 code,Code,code,Code,Codice,código,الرمز,Код,código,コード,代码
+title.width,58,58,58,58,58,58,58,58,58,58
+title2,,"A un certain stade, les dépenses supplémentaires pour la santé bénéficient peu, voire pas du tout, aux citoyens",,,,,,,,
+subtitle,In 2014. Bubbles are sized according to the share of healthcare expenditure out of countries' total gross domestic product (GDP),En 2014. La taille des bulles est proportionnelle à la part des dépenses de santé par rapport au produit intérieur brut (PIB) total du pays. ,,,,,,,,
+y.lab2,Life Expectancy,Espérance de vie,,,,,,,,
+x.lab2b,"(adjusted for inflation, at PPP constant 2011 USD)","(ajustée pour l'inflation, en USD 2011 à PPA)  ",,,,,,,,
+he.tp2,USD*,USD*,,,,,,,,
+le.tp2,years,ans,,,,,,,,
+gdp.tp,Health expenditure in % of GDP,Dépenses pour la santé en % du PIB,,,,,,,,
+legend.key,Click to show or hide,Cliquez pour masquer ou afficher,Anklicken zum Aus- oder Einblenden,Clicca per nascondere o mostrare,Clique para ocultar ou ver,اضغط للتغطية أو للإظهار,"Кликните, чтобы показать или скрыть",Pulsar para mostrar u ocultar,クリックで表示・非表示の切り替えができます,点击打开或收起
+source2.name,World Bank,Banque Mondiale,,,,,,,,
+source2.url,http://data.worldbank.org/indicator/SH.XPD.PCAP.PP.KD,http://data.worldbank.org/indicator/SH.XPD.PCAP.PP.KD,http://data.worldbank.org/indicator/SH.XPD.PCAP.PP.KD,http://data.worldbank.org/indicator/SH.XPD.PCAP.PP.KD,http://data.worldbank.org/indicator/SH.XPD.PCAP.PP.KD,http://data.worldbank.org/indicator/SH.XPD.PCAP.PP.KD,http://data.worldbank.org/indicator/SH.XPD.PCAP.PP.KD,http://data.worldbank.org/indicator/SH.XPD.PCAP.PP.KD,http://data.worldbank.org/indicator/SH.XPD.PCAP.PP.KD,http://data.worldbank.org/indicator/SH.XPD.PCAP.PP.KD
+code.name,highcharter,highcharter,highcharter,highcharter,highcharter,highcharter,highcharter,highcharter,highcharter,highcharter
+code.url,https://github.com/jbkunst/highcharter,https://github.com/jbkunst/highcharter,https://github.com/jbkunst/highcharter,https://github.com/jbkunst/highcharter,https://github.com/jbkunst/highcharter,https://github.com/jbkunst/highcharter,https://github.com/jbkunst/highcharter,https://github.com/jbkunst/highcharter,https://github.com/jbkunst/highcharter,https://github.com/jbkunst/highcharter
+footer.tp,* at purchasing power parity (constant 2011 international USD).,* à parité de pouvoir d'achat (dollars internationaux constants de 2011).,,,,,,,,
 title.font,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,OpenSans-CondensedBold,PingFang SC Semibold,PingFang SC Semibold
 base.font,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,OpenSans-CondensedLight,Hiragino Sans W1,PingFang SC Light
-title.width,58,,,,,,,,,
-title2,Life Expectancy vs Health expenditure,,,,,,,,,
-subtitle,In 2014. Bubbles are sized according to the share of healthcare expenditure out of countries' total gross domestic product (GDP),,,,,,,,,
-y.lab2,Life Expectancy,,,,,,,,,
-x.lab2b,"(adjusted for inflation, at PPP constant 2011 USD)",,,,,,,,,
-he.tp2,USD*,,,,,,,,,
-le.tp2,years,,,,,,,,,
-gdp.tp,Health expenditure in % of GDP,,,,,,,,,
-legend.key,Click to show or hide,Cliquez pour masquer ou afficher,Anklicken zum Aus- oder Einblenden,Clicca per nascondere o mostrare,Clique para ocultar ou ver,اضغط للتغطية أو للإظهار,"Кликните, чтобы показать или скрыть",Pulsar para mostrar u ocultar,クリックで表示・非表示の切り替えができます,点击打开或收起
-source2.name,World Bank,,,,,,,,,
-source2.url,http://data.worldbank.org/indicator/SH.XPD.PCAP.PP.KD,,,,,,,,,
-footer.tp,* at purchasing power parity (constant 2011 international USD).,* à parité de pouvoir d'achat (USD internationaux constants de 2011).,,,,,,,,

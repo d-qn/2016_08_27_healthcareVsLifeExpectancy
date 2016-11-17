@@ -42,7 +42,6 @@ library(forcats)
 library(readxl)
 
 ### Interactive 
-library(parcoords)
 library(htmltools)
 library(shiny)
 library(swiRcharts)
@@ -128,12 +127,12 @@ dd$label <- canton_CH[match(dd$Canton, canton_CH$iso2), 'intl']
   
 for (lang in colnames(txt)) {
   tooltip_css <- "background-color:#f2f2f2;padding:0px;margin:0px;border-radius:5px;"
-  hover_css <- "fill:#ab3d3f;"
+  hover_css <- "fill:#790E11;stroke:#790E11;cursor:pointer;stroke-width:3px"
 
   dd$tip1 <-  paste0(
     '<h4>', as.character(dd$label), '</h4><div class = "tp">', 
     txt['chb.var', lang], ': <b>', round(dd$healthSpendingByCapita, 1), ' </b>', txt['chb.millierCHF.tp', lang], '<br>',
-    txt['prem.var', lang], ': <b>', round(dd$prime), '</b>', txt['prem.CHF.tp', lang], '<br><br>',
+    txt['prem.var', lang], ': <b>', round(dd$prime), '</b> ', txt['prem.CHF.tp', lang], '<br><br>',
     txt['chb.tot.tp', lang], ": ", round(dd$health / 1000), " ", txt['chb.tot.million', lang], "<br>",
     txt['pop.tp', lang],": ", dd$pop,"<br>",
     '</div>')
@@ -153,8 +152,8 @@ for (lang in colnames(txt)) {
         aes_string(size = z, data_id = group, tooltip = tooltip), 
         colour = colour, alpha = 0.65) +
       geom_text(aes_string(label = group), 
-                family = txt["base.font", lang], colour = "white", size = 2.9) + 
-      scale_size_continuous(range = c(5, 25), guide = F) + 
+                family = txt["base.font", lang], colour = "white", size = 3.8) + 
+      scale_size_continuous(range = c(7, 27), guide = F) + 
       scale_x_continuous(
         name = xaxis.lab, 
         breaks = pretty_breaks(n = 5), expand = c(0, 0.15)) + 
@@ -165,18 +164,23 @@ for (lang in colnames(txt)) {
       theme(legend.position = "none") + 
       swi_theme(base_family = txt["base.font", lang], title_family = txt["title.font", lang]) + 
       theme(
-        panel.grid.major.y=element_line(color="#b3b3b3", linetype="dotted", size=0.01),
+        panel.grid.major.y=element_line(color="#b3b3b3", linetype="dotted", size=0.02),
         axis.line.x=element_line(size=0.5),
-        plot.margin = unit(c(0, 0, 0.3, 0.1), "cm")
+        plot.margin = unit(c(0.1, 0, 0.3, 0.1), "cm"),
+        axis.text = element_text(colour = "#8a8d8f"),
+        axis.title = element_text(colour = '#646768'),
+        axis.line = element_line(colour = "#8a8d8f")#,
+       # plot.background=element_rect(fill= "#f3f3f2", colour = "#f3f3f2")
       )
   }
   
   interactivate <- function(gg) {
     ggiraph(
       code = {print(gg)}, 
-      width_svg = 8,
+      width_svg = 9,
       width = 1, 
-      tooltip_offx  = -70,
+      tooltip_offx  = -120,
+      tooltip_offy  = 25,
       hover_css = hover_css,
       tooltip_extra_css = tooltip_css,
       fontname_sans = 'Open Sans Condensed'
@@ -207,27 +211,44 @@ for (lang in colnames(txt)) {
   #igg2
   
   source <- paste0(txt['source', lang], ": ", txt['source.name', lang], " | swissinfo.ch")
+  # save_html(
+  #   tags$html(
+  #     tags$head(includeHTML("styles.html")),
+  #     tags$body(    
+  #       h2(txt["main.title", lang]),
+  #       div(class = "descr", HTML(paste0(txt["descr", lang]))),
+  #       h3(txt["h3a", lang]),
+  #       div(class="container", igg1),
+  #       HTML(iframeresizer)  
+  #     )), file = paste0("scatter_cantonalHealth_1_", lang, ".html"), libdir = "js"
+  # )
+  # save_html(
+  #   tags$html(
+  #     tags$head(includeHTML("styles.html")),
+  #     tags$body(    
+  #       h3(txt["h3b", lang]),
+  #       div(class="container", igg2),
+  #       div(id = "cite", HTML(source)),
+  #       HTML(iframeresizer)  
+  #     )), file =  paste0("scatter_cantonalHealth_2_", lang, ".html"), libdir = "js"
+  # )  
+  # 
   save_html(
     tags$html(
       tags$head(includeHTML("styles.html")),
       tags$body(    
         h2(txt["main.title", lang]),
-        div(class = "descr", HTML(paste0(txt["descr", lang]))),
+        div(class = "descr", HTML(paste0(txt["descr", lang], "<br><br>"))),
         h3(txt["h3a", lang]),
         div(class="container", igg1),
-        HTML(iframeresizer)  
-      )), file = paste0("scatter_cantonalHealth_1_", lang, ".html"), libdir = "js"
-  )
-  save_html(
-    tags$html(
-      tags$head(includeHTML("styles.html")),
-      tags$body(    
         h3(txt["h3b", lang]),
         div(class="container", igg2),
         div(id = "cite", HTML(source)),
         HTML(iframeresizer)  
-      )), file =  paste0("scatter_cantonalHealth_2_", lang, ".html"), libdir = "js"
-  )  
+      )), file = paste0("scatter_cantonalHealth_", lang, ".html"), libdir = "js"#, background = "#f3f3f2"
+  )
+   
+   
 }
 
 

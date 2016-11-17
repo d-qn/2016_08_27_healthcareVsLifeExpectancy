@@ -208,7 +208,7 @@ bc %<>% hc_yAxis(
   ) %>%
   hc_plotOptions(
     bubble = list(
-      maxSize = "5.5%",
+      maxSize = "7%",
       minSize = "0.3%",
       marker = list(lineWidth = 0, fillOpacity = 0.5),
       dataLabels = list(
@@ -217,7 +217,7 @@ bc %<>% hc_yAxis(
         format = '{point.name}', 
         style = list(
           textShadow = F,
-          fontSize = "0.82em",
+          fontSize = "0.9em",
           verticalAlign = "middle",
           fontWeight = "normal"
         )

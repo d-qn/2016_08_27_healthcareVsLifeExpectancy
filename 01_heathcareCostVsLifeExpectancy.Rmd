@@ -250,7 +250,7 @@ for(lang in colnames(txt)) {
   dddd.label <- cbind(dddd.label, dd.seg[match(dddd.label$iso2c, dd.seg$iso2c), 'col'])
     
   footer2 <- paste0("\n", txt['footer.b', lang], " ", txt['footer.c', lang])
-  footer2 <-paste0(strwrap(footer2, width = 180, prefix = "\n"), collapse = "")
+  footer2 <-paste0(strwrap(footer2, width = 176, prefix = "\n"), collapse = "")
    
   p <- ggplot(
     data = dddd, 
@@ -275,7 +275,7 @@ for(lang in colnames(txt)) {
     geom_text(
       data = time.lab, aes(x = x, y = y, label = year, frame  = .frame),
       size = 80, hjust = 1, vjust = 0, family = txt['title.font', lang],
-      colour = "#e5dbcd", alpha = 0.3)   +
+      colour = "#e5dbcd", alpha = 0.5)   +
     sTheme(
       base_size = 25, base_family = txt['base.font', lang], 
       title_family =  txt['title.font', lang], 
@@ -302,8 +302,6 @@ for(lang in colnames(txt)) {
       subtitle =  txt['descr', lang],
       caption = paste0(txt['source', lang], ": ", txt['source.name', lang], " | ", txt['footer.a', lang], " | swissinfo.ch", "\n", footer2)
     )
-  
-  
   
   # 
   # p <- ggplot(
@@ -340,11 +338,13 @@ for(lang in colnames(txt)) {
   #     caption = paste0(txt['source', lang], ": ", txt['source.name', lang], " | ", txt['footer.a', lang], " | swissinfo.ch", "\n", footer2)
   #     )
   # 
+  
   animation::ani.options(interval = ani.interval)
   gg_animate(p, outfile, title_frame = F, ani.width = 640 * 1.4, 
-             ani.height = 640 * 1.4)
+             ani.height = 600 * 1.4)
 
-
+  # move to output
+  file.rename(from = outfile, to = paste0("output/", outfile))
 }
 
 
