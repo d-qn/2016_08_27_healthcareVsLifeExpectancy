@@ -1568,11 +1568,6 @@ years &lt;- by(dd, dd$iso2c, function(ddd) ddd[which(!is.na(ddd$he) &amp; !is.na
 dd %&lt;&gt;% filter(year %in% years)
 dd$col &lt;- swi_rpal[-c(3,5,7, 11)][dd$iso2c]
 
-# keep only one year data every 2 years
-# years &lt;- sort(unique(dd$year))
-# years.sub &lt;- seq(min(years), max(years), 2)
-# dd &lt;- dd %&gt;% filter(year %in% years.sub)
-
 # create a data.frame with start, end values
 tRanges &lt;- dd %&gt;% group_by(iso2c, country) %&gt;% 
   filter(!is.na(he) &amp; !is.na(le)) %&gt;% arrange(year) %&gt;%
@@ -1590,8 +1585,6 @@ dd.seg &lt;- dd %&gt;% filter(year %in% tRanges) %&gt;% arrange(year) %&gt;%
   ungroup()
 
 dd.point &lt;- dd %&gt;% filter(year %in% tRanges)
-#dd.point[which(dd.point$year == min(tRanges)), 'col'] &lt;- &quot;white&quot; 
-#dd.point [which(dd.point$year == max(tRanges)), 'col'] &lt;- &quot;black&quot; 
 # create a list of data frame for each year
 
 ddd &lt;- split(dd.point, dd.point$year)
@@ -1622,7 +1615,7 @@ for(lang in colnames(txt)) {
   dddd.label &lt;- cbind(dddd.label, dd.seg[match(dddd.label$iso2c, dd.seg$iso2c), 'col'])
     
   footer2 &lt;- paste0(&quot;\n&quot;, txt['footer.b', lang], &quot; &quot;, txt['footer.c', lang])
-  footer2 &lt;-paste0(strwrap(footer2, width = 176, prefix = &quot;\n&quot;), collapse = &quot;&quot;)
+  footer2 &lt;- paste0(strwrap(footer2, width = 168, prefix = &quot;\n&quot;), collapse = &quot;&quot;)
    
   p &lt;- ggplot(
     data = dddd, 
@@ -1631,8 +1624,8 @@ for(lang in colnames(txt)) {
     geom_text( 
       data = dddd.label,
       aes(label = label, colour = col), hjust = 0, 
-      nudge_x = 52, nudge_xnudge_y = 1.2, alpha = 1,
-      family = txt['base.font', lang], size = 5.2
+      nudge_x = 61, nudge_xnudge_y = 1.2, alpha = 1,
+      family = txt['base.font', lang], size = 7
     ) + 
     geom_segment(
       data = dd.seg, 
@@ -1643,13 +1636,13 @@ for(lang in colnames(txt)) {
       aes(x = he, y = le, group = iso2c, colour = col), 
       size = 0.3, linetype = &quot;dashed&quot;, alpha = 1
     ) + 
-    geom_point(aes(colour = col, group = iso2c, frame = .frame), size = 4, shape = 18, alpha = 1) +
+    geom_point(aes(colour = col, group = iso2c, frame = .frame), size = 5, shape = 18, alpha = 1) +
     geom_text(
       data = time.lab, aes(x = x, y = y, label = year, frame  = .frame),
-      size = 80, hjust = 1, vjust = 0, family = txt['title.font', lang],
+      size = 88, hjust = 1, vjust = 0, family = txt['title.font', lang],
       colour = &quot;#e5dbcd&quot;, alpha = 0.5)   +
     sTheme(
-      base_size = 25, base_family = txt['base.font', lang], 
+      base_size = 26, base_family = txt['base.font', lang], 
       title_family =  txt['title.font', lang], 
       subtitle = txt['base.font', lang]
     ) +
@@ -1669,51 +1662,15 @@ for(lang in colnames(txt)) {
     ) +
     scale_colour_identity() + 
     labs(
-      title = paste0(strwrap(txt['main.title', lang], width = 66, 
+      title = paste0(strwrap(txt['main.title', lang], width = as.numeric(txt['title.width', lang]), 
         prefix = &quot;\n&quot;, initial = &quot;&quot;), collapse = &quot;&quot;),
       subtitle =  txt['descr', lang],
       caption = paste0(txt['source', lang], &quot;: &quot;, txt['source.name', lang], &quot; | &quot;, txt['footer.a', lang], &quot; | swissinfo.ch&quot;, &quot;\n&quot;, footer2)
     )
   
-  # 
-  # p &lt;- ggplot(
-  #   data = dddd, 
-  #   aes(x = he, y = le, frame = .frame)
-  # ) + 
-  #   geom_text(
-  #     data = time.lab, aes(x = x, y = y, label = year, frame  = .frame), 
-  #     size = 80, hjust = 1, vjust = 0, family = txt['title.font', lang], 
-  #     colour = &quot;#e5dbcd&quot;, alpha = 0.4)   +
-  #   geom_text(
-  #     aes(x = he, y = le, label = label, frame  = .frame, colour = iso2c), 
-  #     hjust = 0, nudge_x = 30, nudge_y = 0.3, family = txt['base.font', lang], size = 5, alpha  = 0.9
-  #   ) +
-  #   geom_path(aes( group = iso2c, colour = iso2c, cumulative = TRUE), size = 0.3) + 
-  #   geom_point(aes( group = iso2c, colour = iso2c), size = 2.5) +
-  #   sTheme(base_size = 20, base_family = txt['base.font', lang], title_family =  txt['title.font', lang], 
-  #          subtitle = txt['base.font', lang]) +
-  #   theme(plot.margin = unit(c(0.3, 1.5, 0.2, 0.7), &quot;lines&quot;)) +
-  #   scale_x_continuous(
-  #     breaks = scales::pretty_breaks(n = 10),
-  #     limits = xlim,
-  #     labels = scales::dollar,
-  #     expand = c(0, 0.1),
-  #     name = paste0(txt[&quot;x.lab&quot;, lang], &quot;\n&quot;, txt[&quot;x.lab2&quot;, lang])) +
-  #   scale_y_continuous(
-  #     limits = ylim, name = txt[&quot;y.lab&quot;, lang], 
-  #     breaks = scales::pretty_breaks(n = 10)
-  #   ) + 
-  #   scale_color_manual(values = swi_rpal) +
-  #   labs(
-  #     title = paste0(strwrap(txt['main.title', lang], width = 66, prefix = &quot;\n&quot;, initial = &quot;&quot;), collapse = &quot;&quot;), 
-  #     subtitle =  txt['descr', lang],
-  #     caption = paste0(txt['source', lang], &quot;: &quot;, txt['source.name', lang], &quot; | &quot;, txt['footer.a', lang], &quot; | swissinfo.ch&quot;, &quot;\n&quot;, footer2)
-  #     )
-  # 
-  
   animation::ani.options(interval = ani.interval)
-  gg_animate(p, outfile, title_frame = F, ani.width = 640 * 1.4, 
-             ani.height = 600 * 1.4)
+  gg_animate(p, outfile, title_frame = F, ani.width = 640 * 1.5, 
+             ani.height = 650 * 1.5)
 
   # move to output
   file.rename(from = outfile, to = paste0(&quot;output/&quot;, outfile))

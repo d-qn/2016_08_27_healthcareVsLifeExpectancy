@@ -73,29 +73,30 @@ ddd$canton <- factor(ddd$canton, canton_CH[match(ct.ordered, canton_CH$iso2), 'i
 
 gp <- ggplot(data = ddd) + 
  # geom_violin(aes(x = canton, y = prime, group = canton), linetype = "blank", fill = "#e5dbcd", alpha = 0.6) + 
-  geom_line(data = ddd %>% group_by(canton) %>% summarise(prime = median(prime)) %>% ungroup(), aes(x = canton, y = prime, group = 1), size = 0.6, alpha = 0.5, colour = "darkgrey") + 
+  geom_line(data = ddd %>% group_by(canton) %>% summarise(prime = median(prime)) %>% 
+              ungroup(), aes(x = canton, y = prime, group = 1), size = 0.6, alpha = 0.5, colour = "darkgrey") + 
   geom_line_interactive(aes(x = canton, y = prime, group = insurerName, color = insurerRank, tooltip = insurerName, data_id = insurerName), size = 0.2, alpha = 0.25) + 
-  #geom_point(aes(x = canton, y = prime, group = insurerName, color = insurerRank), size = 0.6, alpha = 0.5, shape = 18) + 
   geom_point_interactive(aes(x = canton, y = prime, group = insurerName, color = insurerRank, data_id = insurerName, tooltip = insurerName), size = 0.7, alpha = 0.5, shape = 18) + 
-  geom_text(data  = ddd %>% filter(Kanton == "GE"), aes(x = canton, y = prime, label = insurerName), nudge_x = 0.35, hjust = 0, size = 1.9, family = "OpenSans-CondensedLight", check_overlap = T, colour = "#595959") +
-  swi_theme(y_gridlines = F, base_size = 12) + theme(
+  geom_text(data  = ddd %>% filter(Kanton == "GE"), aes(x = canton, y = prime, label = insurerName), nudge_y = -1, nudge_x = 0.35, hjust = 0, size = 1.9, family = "Open Sans Condensed", check_overlap = T, colour = "#595959") +
+  swi_theme(y_gridlines = F, base_size = 12, base_family = "Open Sans Condensed") + 
+  theme(
     legend.position = "none", 
     axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0.5), 
-    axis.text.y = element_text(margin=margin(0,-3,0,0) ),
+    axis.text.y = element_text(margin=margin(0,-1.5,0,0) ),
     plot.background=element_rect(fill= "#f3f3f2", colour = "#f3f3f2")
   )+
   scale_color_viridis(option = "B") +
-  scale_x_discrete(expand = c(-1, 2), name = "") +
-  scale_y_continuous(expand = c(0.005,0.01), breaks = scales::pretty_breaks(n =5))
+  scale_x_discrete(expand = c(-1, 2.1), name = "") +
+  scale_y_continuous(name = "", expand = c(0.005,0.05), breaks = scales::pretty_breaks(n =5)) +
+  geom_text(aes(x = -1, y = 700, label="Primes mensuels (CHF)"), colour = "#2b2b2b", hjust = 0)
 
   #geom_point_interactive(aes(x = Kanton, y = prime, group = insurerName, color = insurerRank, tooltip = prime, data_id = insurerName), size = 0.2, alpha = 0.8)
 igp <- ggiraph(
   code = {print(gp)}, 
-  height_svg = 6,
+  height_svg = 5,
   hover_css = "stroke-width:1.7px;stroke-opacity:0.95;cursor:pointer;",  
   width = 1,
-  fonts = c("Open Sans Condensed")
-  #fontname_sans = 'Open Sans Condensed'
+  fonts = list(sans = "Open Sans Condensed")
 )
 igp
 
@@ -108,7 +109,7 @@ save_html(
       div(class = "descr", HTML(paste0("Tarifs mensuels de l'assurance maladie de base 2017 par canton et par assureur. Pour un adulte, sans couverture d'assurance accident et une franchise de 500.-. Pour les cantons ayant différent tarifs selon les régions, la moyenne cantonale par assureur a été calculée."))),
       div(class="container", igp),
       HTML(iframeresizer)  
-    )), file = paste0("Primes_2017_byCantonInsurer", lang, ".html"), libdir = "js", background = "#f3f3f2"
+    )), file = paste0("Primes_2017_byCantonInsurer_", lang, ".html"), libdir = "js", background = "#f3f3f2"
 )
 
   

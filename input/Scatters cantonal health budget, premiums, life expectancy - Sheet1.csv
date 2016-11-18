@@ -1,7 +1,7 @@
 code,EN,FR,DE,IT,PT,AR,RU,ES,JA,ZH
 main.title,,"Les coûts pour la santé diffèrent largement en Suisse selon les cantons, ceci évidemment sans aucun lien avec l'espérance de vie",,,,,,,,
 descr,,"Liens entre dépenses publiques pour la santé, primes d'assurance maladie de base et espérance de vie. Par canton suisse et en 2014. La taille des bulles est proportionnelle à la population des cantons. ",,,,,,,,
-h3a,,"Les budgets cantonaux pour la santé sont parfaitement corrélés avec les primes d'assurance maladie de base, bien heureusement",,,,,,,,
+h3a,,Les budgets cantonaux pour la santé sont parfaitement corrélés avec les primes d'assurance maladie de base,,,,,,,,
 h3b,,"Mais sans surpise, l'espérance de vie cantonale n'a aucun lien avec le montant des primes d'assurance maladie ",,,,,,,,
 chb.var,,Budget cantonal pour la santé par habitant,,,,,,,,
 chb.millierCHF.tp,,milliers CHF,,,,,,,,
