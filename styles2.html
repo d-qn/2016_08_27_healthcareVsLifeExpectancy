@@ -4,7 +4,8 @@
 
 body, h1, h2, h3, h4, h5, h6, .descr, td, table {
    text-rendering: optimizeLegibility;
-   font-smoothing: antialiased;
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
    font-family: 'Open Sans Condensed', sans-serif;
    font-size: 17px;
    margin:0px 16px 0px 0px;
@@ -43,7 +44,7 @@ svg {
 }
 
 .tp{
-  font-size: 0.75em;
+  font-size: 0.9em;
   padding: 0px 2px 3px 5px;
 }
 
@@ -115,7 +116,7 @@ a, a:visited {
 
 @media only screen and (max-width: 600px) {
     body {
-           font-size: 13px;
+           font-size: 14px;
     }
 }
 
