@@ -35,13 +35,11 @@ plotTest <- F
 
 ani.interval <- 1/5
 
+lang.subset <- 'RU' #NULL # 'JA' #'ZH'
 
 
 translation.file <- "input/healthcare expenditure vs life expectancy - Sheet1.csv"
 
-#iso3.sub <- c("NOR", "CHE", "ITA", "FRA", "JPN", "GBR", "ESP", "USA", "CHN", "IND", "BRA", "RUS")
-
-iso3.sub <- c("CHE", "FRA", "JPN", "KOR", "GBR", "ESP", "PRT", "USA", "DEU", "CAN", "SWE", "TUR")
 iso3.sub <- c("CHE", "FRA", "JPN", "GBR", "ESP", "USA", "DEU")
 
 health.datafile <- "input/healthExpenditure_oecd.csv"
@@ -160,10 +158,10 @@ gp <- ggplot(df, aes(x = he, y = le)) +
   scale_color_manual(values = swi_rpal)
 if(plotTest) gp
 
-tRange <- df.all %>% group_by(iso2c, iso3c, country) %>% 
+tRange <- suppressWarnings(df.all %>% group_by(iso2c, iso3c, country) %>% 
   summarise(start = min(year[which(!is.na(he) & !is.na(le))]), 
             end = max(year[which(!is.na(he) & !is.na(le))])
-  ) %>% ungroup()
+  ) %>% ungroup())
 tRange <- tRange[is.finite(tRange$start),] %>% as.data.frame()
 
 
@@ -228,8 +226,13 @@ time.lab$x <- 9450
 time.lab$y <- 70
 tf <- tf %<>% select(-year)
 
-for(lang in colnames(txt)) {
+if(!is.null(lang.subset) && length(lang.subset) > 0) {
+  txt <- txt[,match(lang.subset, colnames(txt)), drop = F]
+}
 
+for(lang in colnames(txt)) {
+  cat("\n", lang)
+  
   dddd <- tf
   outfile <-  paste0("01_connectedScatter_healthcareEvsLifeE_", lang, ifelse(testGif, "_test", ""), ".gif")
   
@@ -242,19 +245,17 @@ for(lang in colnames(txt)) {
     ungroup()
   dddd.label <- cbind(dddd.label, dd.seg[match(dddd.label$iso2c, dd.seg$iso2c), 'col'])
     
+  footer1 <- paste0(txt['source', lang], ": ", txt['source.name', lang], " | ", txt['footer.a', lang], " | swissinfo.ch")
+  footer1 <- paste0(strwrap(footer1, width =  as.numeric(txt['footerA.width', lang]), prefix = "\n"), collapse = "")  
   footer2 <- paste0("\n", txt['footer.b', lang], " ", txt['footer.c', lang])
-  footer2 <- paste0(strwrap(footer2, width = 168, prefix = "\n"), collapse = "")
+  footer2 <- paste0(strwrap(footer2, width = as.numeric(txt['footerB.width', lang]), prefix = "\n"), collapse = "")
+  caption <- paste0(footer1, "\n", footer2)
+   
    
   p <- ggplot(
     data = dddd, 
     aes(x = he, y = le)
   ) + 
-    geom_text( 
-      data = dddd.label,
-      aes(label = label, colour = col), hjust = 0, 
-      nudge_x = 61, nudge_xnudge_y = 1.2, alpha = 1,
-      family = txt['base.font', lang], size = 7
-    ) + 
     geom_segment(
       data = dd.seg, 
       aes(x = x, xend = xend, y = y, yend = yend, 
@@ -263,6 +264,12 @@ for(lang in colnames(txt)) {
     geom_line(data = dd,
       aes(x = he, y = le, group = iso2c, colour = col), 
       size = 0.3, linetype = "dashed", alpha = 1
+    ) + 
+       geom_text( 
+      data = dddd.label,
+      aes(label = label, colour = col), hjust = 0.5, vjust = -0.6, 
+      alpha = 1,
+      family = txt['base.font', lang], size = 7
     ) + 
     geom_point(aes(colour = col, group = iso2c, frame = .frame), size = 5, shape = 18, alpha = 1) +
     geom_text(
@@ -293,7 +300,7 @@ for(lang in colnames(txt)) {
       title = paste0(strwrap(txt['main.title', lang], width = as.numeric(txt['title.width', lang]), 
         prefix = "\n", initial = ""), collapse = ""),
       subtitle =  txt['descr', lang],
-      caption = paste0(txt['source', lang], ": ", txt['source.name', lang], " | ", txt['footer.a', lang], " | swissinfo.ch", "\n", footer2)
+      caption = caption
     )
   
   animation::ani.options(interval = ani.interval)
@@ -303,11 +310,4 @@ for(lang in colnames(txt)) {
   # move to output
   file.rename(from = outfile, to = paste0("output/", outfile))
 }
-
-
-
-
-
-```
-
 ```

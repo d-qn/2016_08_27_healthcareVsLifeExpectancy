@@ -152,14 +152,14 @@ for (lang in colnames(txt)) {
         aes_string(size = z, data_id = group, tooltip = tooltip), 
         colour = colour, alpha = 0.65) +
       geom_text(aes_string(label = group), 
-                family = "Open Sans Condensed", colour = "white", size = 3.8) + 
-      scale_size_continuous(range = c(7, 27), guide = F) + 
+                family = "Open Sans Condensed", colour = "white", size = 4) + 
+      scale_size_continuous(range = c(8, 35), guide = F) + 
       scale_x_continuous(
         name = xaxis.lab, 
         breaks = pretty_breaks(n = 5), expand = c(0, 0.15)) + 
       scale_y_continuous(
         name = yaxis.lab,
-        expand = c(0.001, 10)
+        expand = c(0.001, 13)
       ) + 
       theme(legend.position = "none") + 
       swi_theme(base_family = "Open Sans Condensed", title_family = txt["title.font", lang]) + 
@@ -211,28 +211,8 @@ for (lang in colnames(txt)) {
   #igg2
   
   source <- paste0(txt['source', lang], ": ", txt['source.name', lang], " | swissinfo.ch")
-  # save_html(
-  #   tags$html(
-  #     tags$head(includeHTML("styles.html")),
-  #     tags$body(    
-  #       h2(txt["main.title", lang]),
-  #       div(class = "descr", HTML(paste0(txt["descr", lang]))),
-  #       h3(txt["h3a", lang]),
-  #       div(class="container", igg1),
-  #       HTML(iframeresizer)  
-  #     )), file = paste0("scatter_cantonalHealth_1_", lang, ".html"), libdir = "js"
-  # )
-  # save_html(
-  #   tags$html(
-  #     tags$head(includeHTML("styles.html")),
-  #     tags$body(    
-  #       h3(txt["h3b", lang]),
-  #       div(class="container", igg2),
-  #       div(id = "cite", HTML(source)),
-  #       HTML(iframeresizer)  
-  #     )), file =  paste0("scatter_cantonalHealth_2_", lang, ".html"), libdir = "js"
-  # )  
-  # 
+
+  outfile <- paste0("scatter_cantonalHealth_", lang, ".html")
   save_html(
     tags$html(
       tags$head(includeHTML("styles.html")),
@@ -245,9 +225,17 @@ for (lang in colnames(txt)) {
         div(class="container", igg2),
         div(id = "cite", HTML(source)),
         HTML(iframeresizer)  
-      )), file = paste0("scatter_cantonalHealth_", lang, ".html"), libdir = "js"#, background = "#f3f3f2"
+      )), file = outfile, libdir = "js"#, background = "#f3f3f2"
   )
    
+  # move to output
+  file.rename(from = outfile, to = paste0("output/", outfile))
+  
+  # copy js to output -------------> TO DO !!!
+  if(file.exists("js")) {
+    file.rename(from = "js", to = paste0("output/", "js"))    
+  }
+
    
 }
 

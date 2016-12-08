@@ -177,9 +177,8 @@ $(document).ready(function () {
   le.data &lt;- read_csv(le.datafife)
   gdp.data &lt;- read_csv(gdp.datafile)
 }</code></pre>
-<pre><code>## Warning in loadTranslation(translation.file): EN DE  IT  PT  AR  RU  ES  JA  ZH languages will be discarded!</code></pre>
 <pre><code>## 
-##  Remaining column names:  FR</code></pre>
+##  Remaining column names:  EN FR DE IT PT AR RU ES JA ZH</code></pre>
 <pre><code>## Parsed with column specification:
 ## cols(
 ##   iso2c = col_character(),
@@ -245,17 +244,7 @@ df &lt;- df %&gt;% filter(region != &quot;Aggregates&quot;)
 regions &lt;- unique(df$region)
 names(regions) &lt;- countryTranslations[match(regions, countryTranslations[,'EN']), &quot;iso2&quot;]
 if(any(is.na(names(regions)))) stop()
-df$region &lt;- names(regions)[match(df$region, regions)]
-
-# compute the loess as a clean data.frame (broom)
-# fit &lt;- loess(le ~ he, data = df, span = 0.9) %&gt;% 
-#   augment() %&gt;% 
-#   arrange(he)
-# 
-# 
-# fit_nls &lt;- nls(le ~ (he ^ b), start = c(b = 0), data = df) %&gt;%
-# augment() %&gt;% 
-#   arrange(he)</code></pre>
+df$region &lt;- names(regions)[match(df$region, regions)]</code></pre>
 <pre class="r"><code>dd &lt;- df 
 dd$label &lt;- ifelse(dd$iso2c %in% iso2.label, dd$iso2c, &quot;&quot;)
 
@@ -265,8 +254,11 @@ for (lang in colnames(txt)) {
   dd$reg &lt;- countryTranslation(dd$region, lang)[,2]
   
   # discard data where no translations are available
-  dd &lt;- dd[-which(is.na(countryTranslation(dd$iso2c, lang)[,2])),]
-  
+  na.idx &lt;- which(is.na(countryTranslation(dd$iso2c, lang)[,2]))
+  if(length(na.idx &gt; 0)) {
+    dd &lt;- dd[-na.idx,]    
+  }
+
   
   dd$tooltip &lt;- paste0(
     '&lt;table cellpadding=&quot;1&quot; style=&quot;line-height:0.9&quot;&gt;',
@@ -304,7 +296,8 @@ for (lang in colnames(txt)) {
       verticalAlign = 'bottom',
       x = 10,
       y = -68,
-      floating = T
+      floating = T,
+      useHTML = ifelse(lang == &quot;AR&quot;, TRUE, FALSE)
     ) %&gt;% 
     hc_add_theme(hc_theme_swi) %&gt;%
     hc_colors(swi_rpal[-c(2,3,4,6)])
@@ -325,12 +318,13 @@ for (lang in colnames(txt)) {
         minSize = &quot;0.3%&quot;,
         marker = list(lineWidth = 0, fillOpacity = 0.5),
         dataLabels = list(
+          useHTML = ifelse(lang == &quot;AR&quot;, TRUE, FALSE),
           enabled = T, 
           allowOverlap = T,
           format = '{point.name}', 
           style = list(
             textShadow = F,
-            fontSize = &quot;0.9em&quot;,
+            fontSize = &quot;0.95em&quot;,
             verticalAlign = &quot;middle&quot;,
             fontWeight = &quot;normal&quot;
           )
@@ -343,6 +337,7 @@ for (lang in colnames(txt)) {
     htmlLink(&quot;http://www.swissinfo.ch&quot;, &quot;swissinfo.ch&quot;)
   )
   
+  outfile &lt;- paste0(&quot;02_healthEVsLifeE_bubble_&quot;, lang, &quot;.html&quot;)
   save_html(
     tags$html(
       tags$head(includeHTML(style_swi_highcharter())),
@@ -354,11 +349,11 @@ for (lang in colnames(txt)) {
         div(class = &quot;footer&quot;, HTML(paste0(txt['footer.tp', lang], &quot; &quot;, txt['footer.c', lang]))),
         HTML(iframeresizer)
       )
-    ), file = paste0(&quot;02_healthEVsLifeE_bubble_&quot;, lang, &quot;.html&quot;), libdir = &quot;js&quot; #, background = &quot;#f2f2f2&quot;
+    ), file = outfile, libdir = &quot;js&quot; #, background = &quot;#f2f2f2&quot;
   )     
   
   # move to output
-  #file.rename(from = outfile, to = paste0(&quot;output/&quot;, outfile))
+  file.rename(from = outfile, to = paste0(&quot;output/&quot;, outfile))
   
   
   # copy js to output -------------&gt; TO DO !!!

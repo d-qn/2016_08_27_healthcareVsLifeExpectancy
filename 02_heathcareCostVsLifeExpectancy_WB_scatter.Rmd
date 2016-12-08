@@ -130,16 +130,6 @@ regions <- unique(df$region)
 names(regions) <- countryTranslations[match(regions, countryTranslations[,'EN']), "iso2"]
 if(any(is.na(names(regions)))) stop()
 df$region <- names(regions)[match(df$region, regions)]
-
-# compute the loess as a clean data.frame (broom)
-# fit <- loess(le ~ he, data = df, span = 0.9) %>% 
-#   augment() %>% 
-#   arrange(he)
-# 
-# 
-# fit_nls <- nls(le ~ (he ^ b), start = c(b = 0), data = df) %>%
-# augment() %>% 
-#   arrange(he)
 ```
 
 
@@ -153,8 +143,11 @@ for (lang in colnames(txt)) {
   dd$reg <- countryTranslation(dd$region, lang)[,2]
   
   # discard data where no translations are available
-  dd <- dd[-which(is.na(countryTranslation(dd$iso2c, lang)[,2])),]
-  
+  na.idx <- which(is.na(countryTranslation(dd$iso2c, lang)[,2]))
+  if(length(na.idx > 0)) {
+    dd <- dd[-na.idx,]    
+  }
+
   
   dd$tooltip <- paste0(
     '<table cellpadding="1" style="line-height:0.9">',
@@ -192,7 +185,8 @@ for (lang in colnames(txt)) {
       verticalAlign = 'bottom',
       x = 10,
       y = -68,
-      floating = T
+      floating = T,
+      useHTML = ifelse(lang == "AR", TRUE, FALSE)
     ) %>% 
     hc_add_theme(hc_theme_swi) %>%
     hc_colors(swi_rpal[-c(2,3,4,6)])
@@ -213,12 +207,13 @@ for (lang in colnames(txt)) {
         minSize = "0.3%",
         marker = list(lineWidth = 0, fillOpacity = 0.5),
         dataLabels = list(
+          useHTML = ifelse(lang == "AR", TRUE, FALSE),
           enabled = T, 
           allowOverlap = T,
           format = '{point.name}', 
           style = list(
             textShadow = F,
-            fontSize = "0.9em",
+            fontSize = "0.95em",
             verticalAlign = "middle",
             fontWeight = "normal"
           )
@@ -231,6 +226,7 @@ for (lang in colnames(txt)) {
     htmlLink("http://www.swissinfo.ch", "swissinfo.ch")
   )
   
+  outfile <- paste0("02_healthEVsLifeE_bubble_", lang, ".html")
   save_html(
     tags$html(
       tags$head(includeHTML(style_swi_highcharter())),
@@ -242,11 +238,11 @@ for (lang in colnames(txt)) {
         div(class = "footer", HTML(paste0(txt['footer.tp', lang], " ", txt['footer.c', lang]))),
         HTML(iframeresizer)
       )
-    ), file = paste0("02_healthEVsLifeE_bubble_", lang, ".html"), libdir = "js" #, background = "#f2f2f2"
+    ), file = outfile, libdir = "js" #, background = "#f2f2f2"
   )     
   
   # move to output
-  #file.rename(from = outfile, to = paste0("output/", outfile))
+  file.rename(from = outfile, to = paste0("output/", outfile))
   
   
   # copy js to output -------------> TO DO !!!
